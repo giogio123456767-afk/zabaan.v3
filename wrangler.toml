@@ -6,6 +6,10 @@ compatibility_date = "2026-09-24"
 directory = "./public"
 binding = "ASSETS"
 
+[[kv_namespaces]]
+binding = "ZABAAN_KV"
+id = "b24b460bfe7349fea047c6c929f3cf59"
+
 # After the first deployment, add your KV namespace in the Cloudflare
 # dashboard as a Worker binding named ZABAAN_KV.
 #
