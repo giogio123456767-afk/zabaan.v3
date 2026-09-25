@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zabaan — Preserve Kashmiri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ---- Kashmiri palette: papier-mâché parchment, Dal Lake teal, saffron crocus, walnut carving ---- */
+  --paper:#EAE2CC;
+  --paper-deep:#DED2B0;
+  --clay:#F2ECDA;
+  --clay-hi:#FAF6E9;
+  --panel:#F3EDDC;
+  --ink:#241C12;
+  --ink-soft:#5A4E3B;
+  --ink-faint:#8D7F63;
+  --teal:#1C6E68;
+  --teal-deep:#0E3E3A;
+  --teal-tint:#D8E9E4;
+  --teal-glass:rgba(28,110,104,0.16);
+  --saffron:#D9822F;
+  --saffron-deep:#A85E17;
+  --saffron-tint:#F4E1C2;
+  --walnut:#7C4A26;
+  --maroon:#8C3B33;
+  --maroon-tint:#F1DCD6;
+  --line:rgba(124,105,66,0.22);
+  --line-strong:rgba(124,105,66,0.38);
+  --white:#FFFDF6;
+  --danger:#A6432F;
+  --danger-tint:#F1DFD8;
+  --font-display:'Fraunces',serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'Space Mono',monospace;
+
+  --radius:20px;
+  --radius-lg:28px;
+  --radius-pill:999px;
+
+  /* claymorphism: soft dual-tone extrusion off the paper */
+  --clay-out:8px 8px 18px rgba(90,68,30,0.22), -7px -7px 16px rgba(255,255,255,0.75);
+  --clay-out-sm:5px 5px 11px rgba(90,68,30,0.20), -4px -4px 10px rgba(255,255,255,0.7);
+  --clay-out-lg:14px 14px 30px rgba(72,54,20,0.26), -10px -10px 24px rgba(255,255,255,0.7);
+  --clay-in:inset 4px 4px 9px rgba(80,60,26,0.20), inset -4px -4px 9px rgba(255,255,255,0.65);
+  --clay-in-sm:inset 2px 2px 5px rgba(80,60,26,0.18), inset -2px -2px 5px rgba(255,255,255,0.6);
+
+  /* glassmorphism: frosted panels over the paper + colour blobs */
+  --glass-bg:rgba(255,253,244,0.46);
+  --glass-bg-strong:rgba(255,253,244,0.68);
+  --glass-border:rgba(255,255,255,0.55);
+  --glass-shadow:0 8px 30px rgba(58,44,18,0.16), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:15.5px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(ellipse 900px 500px at 8% -6%, rgba(217,130,47,0.16), transparent 60%),
+    radial-gradient(ellipse 800px 600px at 96% 8%, rgba(28,110,104,0.16), transparent 55%),
+    radial-gradient(ellipse 700px 700px at 50% 95%, rgba(140,59,51,0.10), transparent 60%),
+    var(--paper);
+  background-attachment:fixed;
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+/* ambient floating clay blobs, purely decorative, behind everything */
+body::before,body::after{
+  content:"";position:fixed;border-radius:50%;filter:blur(60px);z-index:-1;pointer-events:none;
+  animation:drift 26s ease-in-out infinite alternate;
+}
+body::before{
+  width:480px;height:480px;top:-140px;right:-120px;
+  background:radial-gradient(circle, rgba(217,130,47,0.30), transparent 70%);
+}
+body::after{
+  width:520px;height:520px;bottom:-180px;left:-140px;
+  background:radial-gradient(circle, rgba(28,110,104,0.26), transparent 70%);
+  animation-delay:-9s;
+}
+@keyframes drift{
+  0%{transform:translate(0,0) scale(1);}
+  100%{transform:translate(40px,-30px) scale(1.08);}
+}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;font-size:inherit;}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;color:var(--ink);}
+p{margin:0;}
+.mono{font-family:var(--font-mono);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.skip-link{position:absolute;left:-999px;top:0;background:var(--ink);color:var(--white);padding:10px 16px;z-index:200;border-radius:0 0 10px 0;}
+.skip-link:focus{left:0;}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:6px;}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  .reveal{opacity:1 !important;transform:none !important;}
+}
+
+/* ---------- scroll reveal: sections expand into place as you scroll ---------- */
+.reveal{
+  opacity:0;
+  transform:translateY(38px) scale(0.94);
+  transition:opacity .8s cubic-bezier(.22,.68,.2,1), transform .8s cubic-bezier(.22,.68,.2,1);
+  will-change:opacity, transform;
+}
+.reveal.revealed{opacity:1;transform:translateY(0) scale(1);}
+
+/* ---------- layout shell ---------- */
+#app-header{
+  position:sticky;top:0;z-index:50;
+  background:var(--glass-bg-strong);
+  backdrop-filter:blur(18px) saturate(1.3);
+  -webkit-backdrop-filter:blur(18px) saturate(1.3);
+  border-bottom:1px solid var(--glass-border);
+  box-shadow:0 6px 24px rgba(58,44,18,0.08);
+}
+.header-inner{
+  max-width:1180px;margin:0 auto;padding:12px 24px;
+  display:flex;align-items:center;gap:28px;
+}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.brand-mark{width:34px;height:34px;flex-shrink:0;padding:5px;border-radius:12px;background:var(--clay);box-shadow:var(--clay-out-sm);}
+.brand-text{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:0.2px;}
+.brand-sub{display:block;font-family:var(--font-body);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-faint);margin-top:1px;}
+nav.primary-nav{display:flex;gap:2px;flex:1;background:rgba(255,255,255,0.28);padding:5px;border-radius:var(--radius-pill);box-shadow:var(--clay-in-sm);width:fit-content;}
+nav.primary-nav a{
+  padding:8px 14px;font-size:13.5px;font-weight:500;color:var(--ink-soft);
+  border-radius:var(--radius-pill);position:relative;transition:all .18s ease;
+}
+nav.primary-nav a:hover{color:var(--ink);background:rgba(255,255,255,0.55);}
+nav.primary-nav a.active{color:var(--white);background:var(--teal-deep);box-shadow:var(--clay-out-sm);}
+nav.primary-nav a.active::after{display:none;}
+.header-actions{display:flex;align-items:center;gap:10px;}
+.role-switch{
+  display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-faint);
+  border:1px solid var(--glass-border);border-radius:var(--radius-pill);padding:4px 5px 4px 12px;
+  background:rgba(255,255,255,0.4);backdrop-filter:blur(6px);
+}
+.role-switch select{border:none;background:var(--clay);box-shadow:var(--clay-out-sm);font-size:12.5px;font-weight:600;color:var(--teal-deep);padding:5px 10px;border-radius:var(--radius-pill);}
+
+/* ---------- buttons: clay pills ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 20px;border-radius:var(--radius-pill);font-size:13.5px;font-weight:600;
+  border:1px solid transparent;transition:transform .15s ease, box-shadow .15s ease, background .2s ease;
+  white-space:nowrap;
+}
+.btn:active{transform:translateY(1px) scale(0.98);}
+.btn-primary{background:var(--teal-deep);color:var(--white);box-shadow:var(--clay-out-sm), 0 4px 14px rgba(14,62,58,0.35);}
+.btn-primary:hover{background:var(--teal);transform:translateY(-2px);box-shadow:0 10px 22px rgba(14,62,58,0.32);}
+.btn-outline{background:rgba(255,255,255,0.4);border-color:var(--glass-border);color:var(--ink);backdrop-filter:blur(6px);box-shadow:var(--clay-out-sm);}
+.btn-outline:hover{border-color:var(--teal);transform:translateY(-2px);}
+.btn-saffron{background:var(--saffron);color:var(--white);box-shadow:var(--clay-out-sm), 0 4px 14px rgba(168,94,23,0.32);}
+.btn-saffron:hover{filter:brightness(1.05);transform:translateY(-2px);}
+.btn-ghost{background:transparent;color:var(--ink-soft);padding:9px 10px;box-shadow:none;}
+.btn-ghost:hover{color:var(--ink);}
+.btn-danger{background:rgba(255,255,255,0.4);border-color:var(--danger);color:var(--danger);backdrop-filter:blur(6px);}
+.btn-danger:hover{background:var(--danger-tint);}
+.btn-sm{padding:7px 14px;font-size:12.5px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+.mobile-toggle{display:none;background:var(--clay);border:none;border-radius:12px;padding:8px 10px;box-shadow:var(--clay-out-sm);}
+.mobile-toggle span{display:block;width:16px;height:2px;background:var(--ink);margin:3px 0;border-radius:2px;}
+
+main{max-width:1180px;margin:0 auto;padding:0 24px 90px;min-height:60vh;position:relative;}
+footer{margin-top:70px;padding:0;}
+.footer-inner{
+  max-width:1180px;margin:24px auto 44px;padding:30px 30px;
+  background:var(--glass-bg);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
+  border:1px solid var(--glass-border);border-radius:var(--radius-lg);box-shadow:var(--glass-shadow);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;color:var(--ink-faint);font-size:13px;
+}
+
+/* ---------- paisley motif ---------- */
+.paisley{display:block;}
+.paisley path{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.paisley.draw path{stroke-dasharray:400;stroke-dashoffset:400;animation:draw 1.6s ease forwards;}
+@keyframes draw{to{stroke-dashoffset:0;}}
+.divider-row{display:flex;align-items:center;gap:14px;margin:50px 0 34px;color:var(--line-strong);}
+.divider-row .rule{flex:1;height:1px;background:linear-gradient(90deg, transparent, var(--line-strong), transparent);}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;padding:0;margin:24px 0 40px;border-radius:var(--radius-lg);overflow:hidden;
+  box-shadow:var(--clay-out-lg);min-height:560px;display:flex;align-items:flex-end;
+  background:linear-gradient(180deg, rgba(14,20,18,0.15) 0%, rgba(14,20,18,0.72) 100%),
+    url('https://images.pexels.com/photos/28944985/pexels-photo-28944985.jpeg?auto=compress&cs=tinysrgb&w=1800') center/cover no-repeat;
+}
+.hero-glass{
+  margin:0 0 0 0;padding:38px 40px 40px;width:100%;
+  background:linear-gradient(180deg, rgba(255,253,244,0.14), rgba(255,253,244,0.5));
+  backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  border-top:1px solid rgba(255,255,255,0.4);
+  display:grid;grid-template-columns:1.2fr 0.8fr;gap:30px;align-items:end;
+}
+.hero-eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--saffron-tint);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:22px;height:2px;background:var(--saffron);display:inline-block;border-radius:2px;}
+.hero h1{font-size:clamp(32px,4.2vw,50px);line-height:1.06;letter-spacing:-0.3px;color:var(--white);text-shadow:0 2px 20px rgba(0,0,0,0.3);}
+.hero h1 em{font-style:italic;color:#F4D8A8;}
+.hero p.lede{margin-top:16px;font-size:16px;color:rgba(255,253,244,0.88);max-width:46ch;line-height:1.6;}
+.hero-actions{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap;}
+.hero-art{color:var(--saffron-tint);opacity:0.9;justify-self:end;align-self:center;background:rgba(255,255,255,0.14);border-radius:50%;padding:20px;box-shadow:var(--clay-in-sm);}
+.hero-art svg{width:150px;height:150px;}
+
+.stats-strip{
+  margin:-46px 20px 0;position:relative;z-index:2;
+  background:var(--glass-bg-strong);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+  border:1px solid var(--glass-border);border-radius:var(--radius-lg);box-shadow:var(--clay-out-lg);
+  padding:26px 30px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
+}
+.stat{text-align:left;padding-right:10px;}
+.stat .n{font-family:var(--font-display);font-size:30px;font-weight:600;color:var(--teal-deep);}
+.stat .l{font-size:12px;color:var(--ink-faint);letter-spacing:0.3px;margin-top:2px;}
+
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;gap:16px;flex-wrap:wrap;}
+.section-head h2{font-size:24px;}
+.section-head .desc{color:var(--ink-faint);font-size:13.5px;margin-top:4px;}
+.eyebrow-sm{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--saffron-deep);font-weight:700;margin-bottom:6px;}
+
+/* ---------- generic clay/glass surfaces ---------- */
+.panel{
+  background:var(--glass-bg);backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);
+  border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:var(--glass-shadow);
+}
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0 10px;}
+.pillar{
+  background:var(--clay);padding:24px 22px;border-radius:var(--radius);box-shadow:var(--clay-out);
+  transition:transform .3s cubic-bezier(.22,.68,.2,1), box-shadow .3s ease;
+}
+.pillar:hover{transform:translateY(-6px);box-shadow:var(--clay-out-lg);}
+.pillar .num{font-family:var(--font-mono);font-size:12px;color:var(--saffron-deep);font-weight:700;}
+.pillar h3{font-size:16px;margin-top:10px;}
+.pillar p{font-size:13px;color:var(--ink-soft);margin-top:8px;}
+
+.demo-callout{
+  display:flex;gap:12px;align-items:flex-start;
+  background:linear-gradient(135deg, var(--saffron-tint), rgba(244,225,194,0.5));
+  border:1px solid rgba(217,130,47,0.3);box-shadow:var(--clay-in-sm);
+  padding:14px 18px;border-radius:var(--radius);font-size:13px;color:#6B4A22;margin:20px 0;
+}
+.demo-callout b{font-weight:700;}
+
+/* ---------- dictionary ---------- */
+.search-shell{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;}
+.search-box{
+  flex:1;min-width:240px;display:flex;align-items:center;gap:10px;
+  background:var(--clay);border:none;border-radius:var(--radius-pill);padding:13px 20px;
+  box-shadow:var(--clay-in);
+}
+.search-box input{border:none;outline:none;background:none;flex:1;font-size:15px;color:var(--ink);}
+.search-box svg{color:var(--ink-faint);flex-shrink:0;}
+.dir-toggle{display:flex;border-radius:var(--radius-pill);overflow:hidden;background:var(--clay);box-shadow:var(--clay-in-sm);padding:3px;gap:3px;}
+.dir-toggle button{padding:9px 16px;font-size:12.5px;font-weight:600;background:transparent;color:var(--ink-soft);border:none;border-radius:var(--radius-pill);transition:all .2s ease;}
+.dir-toggle button.active{background:var(--teal-deep);color:var(--white);box-shadow:var(--clay-out-sm);}
+.filters-row{display:flex;gap:8px;margin:16px 0 4px;flex-wrap:wrap;}
+.chip{
+  font-size:12px;padding:7px 14px;border-radius:var(--radius-pill);border:1px solid var(--glass-border);color:var(--ink-soft);
+  background:rgba(255,255,255,0.4);backdrop-filter:blur(6px);transition:all .2s ease;
+}
+.chip.active{background:var(--teal-tint);border-color:var(--teal);color:var(--teal-deep);font-weight:600;box-shadow:var(--clay-in-sm);}
+.result-count{font-size:12.5px;color:var(--ink-faint);margin:18px 0 12px;}
+.entry-list{display:flex;flex-direction:column;gap:12px;}
+.entry-card{
+  display:grid;grid-template-columns:1.1fr 1.4fr auto auto;gap:16px;align-items:center;
+  padding:20px 22px;border-radius:var(--radius);
+  background:var(--clay);box-shadow:var(--clay-out-sm);
+  transition:transform .25s cubic-bezier(.22,.68,.2,1), box-shadow .25s ease;
+}
+.entry-card:hover{background:var(--clay-hi);transform:translateY(-4px) scale(1.005);box-shadow:var(--clay-out-lg);}
+.entry-card .ks{font-family:var(--font-display);font-size:21px;font-weight:600;}
+.entry-card .ks .translit{display:block;font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);font-weight:400;margin-top:2px;}
+.entry-card .meaning{font-size:14px;color:var(--ink-soft);}
+.entry-card .phon{font-family:var(--font-mono);font-size:12px;color:var(--teal-deep);background:var(--teal-tint);padding:4px 10px;border-radius:var(--radius-pill);display:inline-block;width:fit-content;}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:10.5px;letter-spacing:0.3px;text-transform:uppercase;padding:4px 9px;border-radius:var(--radius-pill);font-weight:700;}
+.tag.pos{background:rgba(124,105,66,0.14);color:var(--ink-soft);}
+.tag.verified{background:var(--teal-tint);color:var(--teal-deep);}
+.tag.unverified{background:var(--saffron-tint);color:#8A5A20;}
+.tag.demo{background:#EEE7D7;color:#7A6E52;}
+.empty-state{
+  text-align:center;padding:60px 20px;border-radius:var(--radius-lg);color:var(--ink-soft);
+  background:var(--glass-bg);backdrop-filter:blur(14px);border:1px dashed var(--line-strong);
+}
+.empty-state h3{font-size:19px;margin-bottom:8px;}
+.empty-state p{font-size:13.5px;color:var(--ink-faint);max-width:40ch;margin:0 auto 18px;}
+
+/* ---------- entry detail ---------- */
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);margin:26px 0 6px;}
+.back-link:hover{color:var(--teal-deep);}
+.entry-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-top:14px;}
+.entry-head .ks-big{font-family:var(--font-display);font-size:48px;font-weight:600;line-height:1;}
+.entry-head .translit-big{font-family:var(--font-mono);color:var(--ink-faint);font-size:14px;margin-top:8px;}
+.entry-head .meaning-big{font-size:18px;color:var(--ink-soft);margin-top:6px;}
+.meta-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:18px;margin:28px 0;padding:22px 24px;
+  background:var(--glass-bg);backdrop-filter:blur(14px);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:var(--glass-shadow);
+}
+.meta-item .k{font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-faint);}
+.meta-item .v{font-size:14px;margin-top:3px;font-weight:500;}
+.meta-item .v.mono{font-family:var(--font-mono);font-size:13.5px;}
+.section-block{margin:38px 0;}
+.section-block h3{font-size:15px;text-transform:uppercase;letter-spacing:0.7px;color:var(--ink-faint);margin-bottom:14px;font-family:var(--font-body);font-weight:700;}
+.audio-item{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:var(--radius);margin-bottom:10px;background:var(--clay);box-shadow:var(--clay-out-sm);}
+.play-btn{width:38px;height:38px;border-radius:50%;background:var(--teal-deep);color:var(--white);border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--clay-out-sm);}
+.play-btn:hover{background:var(--teal);}
+.audio-meta{flex:1;font-size:12.5px;color:var(--ink-soft);}
+.audio-meta b{color:var(--ink);font-size:13.5px;display:block;}
+.speed-row{display:flex;gap:4px;}
+.speed-row button{font-size:11px;padding:4px 9px;border:none;background:rgba(255,255,255,0.5);border-radius:var(--radius-pill);color:var(--ink-soft);}
+.speed-row button.active{background:var(--ink);color:var(--white);}
+.example-card{padding:18px 20px;background:linear-gradient(135deg, var(--panel), var(--clay-hi));margin-bottom:12px;border-radius:var(--radius);box-shadow:var(--clay-out-sm);border-left:4px solid var(--saffron);}
+.example-card .ex-ks{font-family:var(--font-display);font-size:17px;}
+.example-card .ex-en{color:var(--ink-soft);font-size:13.5px;margin-top:4px;}
+.example-card .ex-ph{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);margin-top:4px;}
+.grammar-box{padding:20px 22px;border-radius:var(--radius);background:var(--glass-bg);backdrop-filter:blur(14px);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);}
+.grammar-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.grammar-row:last-child{border-bottom:none;}
+.grammar-form{font-family:var(--font-mono);font-weight:700;color:var(--teal-deep);}
+.source-note{font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+.undocumented{color:var(--ink-faint);font-style:italic;font-size:13px;}
+.trace-link{font-size:11px;color:var(--teal-deep);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0;}
+.correction-box{margin-top:10px;}
+.regional-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+.regional-card{padding:16px 18px;border-radius:var(--radius);background:var(--clay);box-shadow:var(--clay-out-sm);}
+.regional-card .region{font-size:12px;font-weight:700;color:var(--teal-deep);}
+
+/* ---------- forms ---------- */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.field{margin-bottom:4px;display:flex;flex-direction:column;gap:6px;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+.field .hint{font-size:11px;color:var(--ink-faint);}
+.field input[type=text],.field input[type=email],.field input[type=password],.field textarea,.field select{
+  padding:12px 14px;border:none;border-radius:14px;background:var(--clay);color:var(--ink);box-shadow:var(--clay-in-sm);
+}
+.field input:focus,.field textarea:focus,.field select:focus{box-shadow:var(--clay-in-sm), 0 0 0 2px var(--teal);}
+.field textarea{resize:vertical;min-height:70px;}
+.contrib-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0 30px;}
+.contrib-type{padding:18px;border-radius:var(--radius);text-align:left;background:var(--clay);box-shadow:var(--clay-out-sm);transition:transform .2s ease, box-shadow .2s ease;}
+.contrib-type:hover{transform:translateY(-3px);box-shadow:var(--clay-out);}
+.contrib-type.active{background:var(--teal-tint);box-shadow:var(--clay-in-sm);}
+.contrib-type .t{font-weight:700;font-size:13.5px;}
+.contrib-type .d{font-size:11.5px;color:var(--ink-faint);margin-top:3px;}
+.form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;flex-wrap:wrap;gap:12px;}
+.notice{font-size:12px;color:var(--ink-faint);max-width:40ch;}
+.rec-box{border-radius:var(--radius);padding:18px;display:flex;align-items:center;gap:14px;background:var(--glass-bg);backdrop-filter:blur(10px);border:1px dashed var(--line-strong);flex-wrap:wrap;}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);}
+.rec-dot.live{animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--white);padding:14px 22px;
+  border-radius:var(--radius);font-size:13.5px;box-shadow:var(--clay-out-lg);z-index:300;max-width:320px;
+  animation:toastin .3s cubic-bezier(.22,.68,.2,1);
+}
+@keyframes toastin{from{transform:translateY(14px) scale(0.96);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+
+/* ---------- my contributions / status ---------- */
+.status-pill{font-size:11px;font-weight:700;padding:4px 11px;border-radius:var(--radius-pill);display:inline-flex;align-items:center;gap:5px;}
+.status-PENDING{background:var(--saffron-tint);color:#8A5A20;}
+.status-APPROVED{background:var(--teal-tint);color:var(--teal-deep);}
+.status-REJECTED{background:var(--danger-tint);color:var(--danger);}
+.status-NEEDS_CORRECTION{background:#EFE6F5;color:#6A3E8C;}
+.my-contrib-row{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;margin-bottom:10px;border-radius:var(--radius);background:var(--clay);box-shadow:var(--clay-out-sm);gap:12px;flex-wrap:wrap;}
+.my-contrib-row .info{font-size:13.5px;}
+.my-contrib-row .info .type{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.4px;}
+
+/* ---------- admin ---------- */
+.admin-locked{padding:70px 20px;text-align:center;}
+.admin-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px;}
+.admin-stat{background:var(--clay);padding:18px;border-radius:var(--radius);box-shadow:var(--clay-out-sm);}
+.admin-stat .n{font-family:var(--font-display);font-size:22px;font-weight:600;}
+.admin-stat .l{font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.4px;margin-top:2px;}
+table.queue{width:100%;border-collapse:separate;border-spacing:0 10px;font-size:13px;}
+table.queue th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);padding:0 14px 6px;}
+table.queue td{padding:14px;background:var(--glass-bg);backdrop-filter:blur(10px);border:1px solid var(--glass-border);vertical-align:top;}
+table.queue td:first-child{border-radius:14px 0 0 14px;border-right:none;}
+table.queue td:last-child{border-radius:0 14px 14px 0;border-left:none;}
+table.queue tr td{border-left:none;border-right:none;}
+table.queue tr:hover td{background:var(--glass-bg-strong);}
+.action-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.diff-box{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;}
+.diff-col{padding:14px 16px;border-radius:var(--radius);background:var(--clay);font-size:13px;box-shadow:var(--clay-in-sm);}
+.diff-col h4{font-size:11px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(20,16,10,0.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:400;padding:20px;}
+.modal{
+  background:var(--glass-bg-strong);backdrop-filter:blur(24px) saturate(1.3);-webkit-backdrop-filter:blur(24px) saturate(1.3);
+  border:1px solid var(--glass-border);border-radius:var(--radius-lg);max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:30px;
+  box-shadow:var(--clay-out-lg);
+}
+.modal h3{margin-bottom:14px;}
+.modal-close{float:right;background:var(--clay);border:none;font-size:18px;color:var(--ink-faint);width:30px;height:30px;border-radius:50%;box-shadow:var(--clay-out-sm);}
+
+/* ---------- learn / speak / about ---------- */
+.tab-strip{display:flex;gap:4px;margin:28px 0;overflow-x:auto;background:var(--clay);padding:5px;border-radius:var(--radius-pill);width:fit-content;box-shadow:var(--clay-in-sm);}
+.tab-strip button{padding:10px 18px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none;border:none;border-radius:var(--radius-pill);white-space:nowrap;transition:all .2s ease;}
+.tab-strip button.active{color:var(--white);background:var(--teal-deep);box-shadow:var(--clay-out-sm);}
+.lesson-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+.lesson-card{padding:20px;border-radius:var(--radius);background:var(--clay);box-shadow:var(--clay-out-sm);transition:transform .25s cubic-bezier(.22,.68,.2,1), box-shadow .25s ease;}
+.lesson-card:hover{transform:translateY(-5px);box-shadow:var(--clay-out-lg);}
+.lesson-card h4{font-size:14.5px;margin-bottom:6px;}
+.lesson-card p{font-size:12px;color:var(--ink-faint);}
+.speak-panel{display:grid;grid-template-columns:1fr;gap:16px;max-width:640px;}
+.speak-io{padding:22px;border-radius:var(--radius);background:var(--glass-bg);backdrop-filter:blur(14px);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);}
+.ai-tag{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;background:#EFE6F5;color:#6A3E8C;padding:4px 10px;border-radius:var(--radius-pill);}
+.about-body{max-width:70ch;font-size:15.5px;color:var(--ink-soft);line-height:1.75;}
+.about-body h3{font-size:16px;color:var(--ink);margin:28px 0 10px;font-family:var(--font-body);}
+.about-body ul{padding-left:20px;}
+.about-body li{margin-bottom:6px;}
+
+/* ---------- theme photo banner (about / learn) ---------- */
+.photo-banner{
+  position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--clay-out-lg);
+  margin:20px 0 34px;min-height:230px;background-size:cover;background-position:center;
+  display:flex;align-items:flex-end;
+}
+.photo-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, rgba(14,20,18,0.05), rgba(14,20,18,0.62));}
+.photo-banner .cap{position:relative;z-index:1;padding:20px 26px;color:var(--white);font-size:13px;max-width:52ch;}
+.photo-banner .cap b{font-family:var(--font-display);font-size:17px;display:block;margin-bottom:4px;}
+
+@media (max-width:880px){
+  .hero{min-height:auto;}
+  .hero-glass{grid-template-columns:1fr;}
+  .hero-art{display:none;}
+  .stats-strip{grid-template-columns:repeat(2,1fr);margin:16px 0 0;}
+  .pillars{grid-template-columns:1fr 1fr;}
+  .entry-card{grid-template-columns:1fr;gap:6px;}
+  .form-grid{grid-template-columns:1fr;}
+  .contrib-type-grid{grid-template-columns:1fr 1fr;}
+  .admin-stats{grid-template-columns:repeat(3,1fr);}
+  .diff-box{grid-template-columns:1fr;}
+  nav.primary-nav{display:none;}
+  .mobile-toggle{display:block;}
+  nav.primary-nav.open{
+    display:flex;flex-direction:column;position:absolute;top:64px;left:16px;right:16px;
+    background:var(--glass-bg-strong);backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);border-radius:var(--radius);padding:8px;gap:2px;width:auto;box-shadow:var(--clay-out-lg);
+  }
+}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header id="app-header">
+  <div class="header-inner">
+    <a href="#/" class="brand" aria-label="Zabaan home">
+      <svg class="brand-mark paisley" viewBox="0 0 40 40" style="color:var(--teal-deep)">
+        <path d="M20 6 C30 6 32 16 26 22 C22 26 24 30 20 32 C13 34 8 28 10 20 C11 15 15 6 20 6 Z"/>
+        <circle cx="21" cy="14" r="1.6" fill="var(--saffron)" stroke="none"/>
+      </svg>
+      <span><span class="brand-text">Zabaan</span><span class="brand-sub">Kashmiri Archive</span></span>
+    </a>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="#/" data-route="/">Home</a>
+      <a href="#/dictionary" data-route="/dictionary">Dictionary</a>
+      <a href="#/speak" data-route="/speak">Speak</a>
+      <a href="#/contribute" data-route="/contribute">Contribute</a>
+      <a href="#/learn" data-route="/learn">Learn</a>
+      <a href="#/about" data-route="/about">About</a>
+      <a href="#/admin" data-route="/admin" id="adminNavLink">Admin</a>
+    </nav>
+    <div class="header-actions">
+      <div class="role-switch">
+        <span>Viewing as</span>
+        <select id="roleSelect" aria-label="Switch demo role">
+          <option value="visitor">Visitor</option>
+          <option value="contributor">Contributor</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+      <a href="#/contribute" class="btn btn-primary btn-sm">Contribute</a>
+    </div>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <b style="color:var(--ink);font-family:var(--font-display);font-size:16px;">Zabaan</b><br>
+      A community archive for the Kashmiri language — learn it, speak it, document it, preserve it.
+    </div>
+    <div style="max-width:340px;">
+      <div>Every entry here is demonstration data unless a contributor tells us otherwise.</div>
+      <button class="btn btn-outline btn-sm" id="footerDownloadBtn" style="margin-top:12px;">Download all data (.json)</button>
+      <p style="font-size:11.5px;color:var(--ink-faint);margin-top:8px;">A snapshot of every word, grammar rule, and contribution currently in the archive — generated fresh each time you click, so it's always current. Free to reuse for your own projects, and it's also how you move data between computers.</p>
+    </div>
+  </div>
+</footer>
+
+<div id="toastHost"></div>
+<div id="modalHost"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   STORAGE LAYER — tiered persistence:
+   0) remote API (/api/store) — a tiny Cloudflare Worker
+      backed by KV. This is what makes "shared" data (the
+      dictionary + the contribution queue) visible across every
+      device and browser — a contribution submitted on someone
+      else's phone shows up in Admin Review on yours. Only used
+      for keys marked shared=true, and only when the site is
+      actually deployed behind that Function (see functions/api).
+   1) window.storage  — works when this file is viewed inside Claude
+   2) localStorage     — works when the file is opened standalone in
+                          a regular browser tab, and survives closing it
+                          (also doubles as an offline cache of the
+                          last-synced remote data)
+   3) in-memory        — last-resort fallback for this session only
+   ========================================================= */
+var memoryFallback = {};
+var LS_PREFIX = 'zabaan:';
+var hasWindowStorage = (typeof window.storage !== 'undefined');
+var hasRemoteAPI = null;   // null = not probed yet; true/false once known
+var adminToken = null;     // plaintext admin password, kept in memory only,
+                            // sent as a header to authorize protected writes.
+                            // Never persisted to localStorage/sessionStorage.
+
+async function probeRemoteAPI(){
+  if(hasRemoteAPI !== null) return hasRemoteAPI;
+  try{
+    var res = await fetch('/api/store?key=' + encodeURIComponent('zabaan-entries-v1'), {method:'GET'});
+    hasRemoteAPI = res.status !== 404 && res.status !== 405;
+  }catch(e){
+    hasRemoteAPI = false;
+  }
+  return hasRemoteAPI;
+}
+
+function lsGet(key){
+  try{
+    var raw = localStorage.getItem(LS_PREFIX + key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function lsSet(key, value){
+  try{
+    localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
+    return true;
+  }catch(e){ return false; }
+}
+
+async function sGet(key, shared){
+  if(shared && await probeRemoteAPI()){
+    try{
+      var headers = {};
+      if(adminToken) headers['X-Admin-Password'] = adminToken;
+      var res = await fetch('/api/store?key=' + encodeURIComponent(key), {headers:headers});
+      if(res.ok){
+        var body = await res.json();
+        if(body && body.value !== null && body.value !== undefined){
+          lsSet(key, body.value); // keep an offline cache in sync
+          return body.value;
+        }
+      }
+      // 401 (not logged in as admin, for admin-only reads like the
+      // contribution queue) or an empty key falls through below.
+    }catch(e){ /* network hiccup — fall through to local cache */ }
+  }
+  if(hasWindowStorage){
+    try{
+      var r = await window.storage.get(key, !!shared);
+      return r ? JSON.parse(r.value) : null;
+    }catch(e){ /* fall through to localStorage */ }
+  }
+  var ls = lsGet(key);
+  if(ls !== null) return ls;
+  return memoryFallback[key] !== undefined ? memoryFallback[key] : null;
+}
+async function sSet(key, value, shared){
+  memoryFallback[key] = value;
+  lsSet(key, value); // always mirror to localStorage so standalone use persists
+  if(shared && await probeRemoteAPI()){
+    try{
+      var headers = {'Content-Type':'application/json'};
+      if(adminToken) headers['X-Admin-Password'] = adminToken;
+      var res = await fetch('/api/store?key=' + encodeURIComponent(key), {
+        method:'POST', headers:headers, body: JSON.stringify({value:value})
+      });
+      if(res.ok) return true;
+      if(res.status === 401) toast('Not saved to the shared archive — admin sign-in required or expired.');
+    }catch(e){ /* localStorage mirror above still covers us, offline */ }
+  }
+  if(hasWindowStorage){
+    try{
+      await window.storage.set(key, JSON.stringify(value), !!shared);
+    }catch(e){ /* localStorage mirror above still covers us */ }
+  }
+  return true;
+}
+
+var K = {
+  entries: 'zabaan-entries-v1',
+  rules: 'zabaan-plural-rules-v1',
+  contributions: 'zabaan-contributions-v1',
+  role: 'zabaan-demo-role-v1'
+};
+
+/* =========================================================
+   SEED DATA — clearly labeled demonstration entries only.
+   Nothing here is presented as verified Kashmiri vocabulary;
+   the app itself never invents linguistic content.
+   ========================================================= */
+function seedRules(){
+  return [
+    {
+      id:'rule-a-suffix',
+      name:'Class A — vowel-final suffix pattern (demo)',
+      description:'Demonstration rule: appends a placeholder plural marker to class-A nouns. Not verified Kashmiri grammar — for illustrating the engine only.',
+      pluralClass:'class-a-demo',
+      transformation:{type:'suffix', value:'-an'},
+      verificationStatus:'unverified',
+      version:1
+    },
+    {
+      id:'rule-b-suffix',
+      name:'Class B — consonant-final suffix pattern (demo)',
+      description:'Demonstration rule for class-B nouns. Not verified Kashmiri grammar.',
+      pluralClass:'class-b-demo',
+      transformation:{type:'suffix', value:'-yo'},
+      verificationStatus:'unverified',
+      version:1
+    }
+  ];
+}
+
+function seedEntries(){
+  return [
+    {
+      id:'demo-001',
+      code:'DEMO_ENTRY_001',
+      isDemo:true,
+      lemma:'namaskaar-ks',
+      transliteration:'namaskaar-ks (placeholder)',
+      meaning:'a greeting (placeholder meaning — not verified)',
+      pos:'interjection',
+      gender:null,
+      pluralClass:null,
+      irregularPlural:null,
+      phoneticEasy:'nə-mə-SKAAR (demo)',
+      ipa:null,
+      dialect:'—',
+      region:'Unspecified',
+      verificationStatus:'unverified',
+      contributors:['Seed / demonstration'],
+      examples:[],
+      audio:[],
+      notes:'This is a placeholder record used to demonstrate the entry layout. Replace with a verified, community-sourced Kashmiri word.',
+      revisions:[{version:1, note:'Seed demonstration record created.', date:'2026-01-01'}]
+    },
+    {
+      id:'demo-002',
+      code:'DEMO_ENTRY_002',
+      isDemo:true,
+      lemma:'kitaab-ks',
+      transliteration:'kitaab-ks (placeholder)',
+      meaning:'book (placeholder meaning — not verified)',
+      pos:'noun',
+      gender:'masculine (placeholder)',
+      pluralClass:'class-a-demo',
+      irregularPlural:null,
+      phoneticEasy:'ki-TAAB (demo)',
+      ipa:null,
+      dialect:'—',
+      region:'Unspecified',
+      verificationStatus:'unverified',
+      contributors:['Seed / demonstration'],
+      examples:[
+        {ks:'yeh kitaab-ks (demo)', en:'this book (placeholder)', phonetic:'yeh ki-TAAB', verified:false}
+      ],
+      audio:[],
+      notes:'Placeholder noun used to demonstrate the data-driven plural engine (see Grammar section on its entry page).',
+      revisions:[{version:1, note:'Seed demonstration record created.', date:'2026-01-01'}]
+    },
+    {
+      id:'demo-003',
+      code:'DEMO_ENTRY_003',
+      isDemo:true,
+      lemma:'aab-ks',
+      transliteration:'aab-ks (placeholder)',
+      meaning:'water (placeholder meaning — not verified)',
+      pos:'noun',
+      gender:'feminine (placeholder)',
+      pluralClass:null,
+      irregularPlural:'aab-ks (uncountable — placeholder)',
+      phoneticEasy:'AAB (demo)',
+      ipa:null,
+      dialect:'—',
+      region:'Unspecified',
+      verificationStatus:'unverified',
+      contributors:['Seed / demonstration'],
+      examples:[],
+      audio:[],
+      notes:'Placeholder demonstrating an irregular / non-generated form overriding the rule engine.',
+      revisions:[{version:1, note:'Seed demonstration record created.', date:'2026-01-01'}]
+    }
+  ];
+}
+
+/* =========================================================
+   GRAMMAR ENGINE — data-driven, never guesses.
+   ========================================================= */
+var grammarEngine = {
+  generatePlural: function(entry, rules){
+    if(entry.irregularPlural){
+      return {form: entry.irregularPlural, source:'irregular', ruleId:null, ruleVersion:null};
+    }
+    if(!entry.pluralClass){
+      return {form:null, source:'undocumented'};
+    }
+    var rule = rules.find(function(r){ return r.pluralClass === entry.pluralClass; });
+    if(!rule){
+      return {form:null, source:'undocumented'};
+    }
+    var base = (entry.lemma || '').replace(/-ks$/,'');
+    var form = base + rule.transformation.value + '-ks';
+    return {
+      form: form,
+      source:'rule',
+      ruleId: rule.id,
+      ruleName: rule.name,
+      ruleVersion: rule.version,
+      ruleVerified: rule.verificationStatus === 'verified'
+    };
+  }
+};
+
+/* =========================================================
+   STATE
+   ========================================================= */
+var state = {
+  entries: [],
+  rules: [],
+  contributions: [],
+  role: 'visitor',
+  adminUnlocked: false, // never persisted — must be re-entered each session
+  search: '',
+  direction: 'en-ks', // en-ks | ks-en
+  posFilter: 'all',
+  contribType: 'word',
+  duplicateAck: false,
+  recording: {active:false, blobUrl:null, stream:null, mediaRecorder:null, chunks:[]},
+  playbackSpeed: {}
+};
+
+/* Admin gate.
+   When deployed behind the Cloudflare Worker,
+   the password is checked server-side against the ADMIN_PASSWORD
+   secret (never shipped in this file), and the same password is
+   then sent as an X-Admin-Password header on writes to the
+   dictionary and the contribution queue, so those writes are
+   actually protected — not just hidden behind a UI gate.
+   If no backend is configured yet (e.g. opened standalone), this
+   falls back to a local hash check, which is a preview-only gate
+   and NOT real security — anyone with dev tools can bypass it. */
+var ADMIN_PW_HASH = '451a05e2e8dfbe53950583a7cccc7b051e71b597bc53ce0b2daac5bb6fc8b308';
+
+async function sha256Hex(str){
+  var enc = new TextEncoder().encode(str);
+  var buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+async function checkAdminPassword(input){
+  if(!input) return false;
+  if(await probeRemoteAPI()){
+    try{
+      var res = await fetch('/api/admin-login', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({password:input})
+      });
+      var body = await res.json().catch(function(){ return {ok:false}; });
+      if(body.ok){ adminToken = input; return true; }
+      return false;
+    }catch(e){ /* offline / function unreachable — fall through */ }
+  }
+  var hash = await sha256Hex(input);
+  if(hash === ADMIN_PW_HASH){ adminToken = input; return true; }
+  return false;
+}
+
+async function loadAll(){
+  var e = await sGet(K.entries, true);
+  var r = await sGet(K.rules, true);
+  var c = await sGet(K.contributions, true);
+  var role = await sGet(K.role, false);
+  if(!e){ e = seedEntries(); await sSet(K.entries, e, true); }
+  if(!r){ r = seedRules(); await sSet(K.rules, r, true); }
+  if(!c){ c = []; await sSet(K.contributions, c, true); }
+  state.entries = e;
+  state.rules = r;
+  state.contributions = c;
+  state.role = role || 'visitor';
+}
+
+/* =========================================================
+   ROUTER
+   ========================================================= */
+function currentRoute(){
+  var h = location.hash.replace(/^#/, '') || '/';
+  var parts = h.split('/').filter(Boolean);
+  return {path: '/' + (parts[0] || ''), parts: parts};
+}
+
+function navigate(){
+  var r = currentRoute();
+  document.querySelectorAll('nav.primary-nav a').forEach(function(a){
+    a.classList.toggle('active', a.dataset.route === r.path || (r.path==='/'+parts0(r)&&false));
+  });
+  document.querySelectorAll('nav.primary-nav a').forEach(function(a){
+    var match = ('/' + (r.parts[0]||'')) === a.dataset.route;
+    a.classList.toggle('active', match);
+  });
+  window.scrollTo(0,0);
+  render(r);
+}
+function parts0(r){ return r.parts[0]||''; }
+
+window.addEventListener('hashchange', navigate);
+
+/* =========================================================
+   RENDER — main dispatcher
+   ========================================================= */
+var mainEl = document.getElementById('main');
+
+function render(r){
+  var seg = r.parts[0] || '';
+  if(seg === '') return renderHome();
+  if(seg === 'dictionary') return renderDictionary();
+  if(seg === 'entry') return renderEntryDetail(r.parts[1]);
+  if(seg === 'speak') return renderSpeak();
+  if(seg === 'contribute') return renderContribute();
+  if(seg === 'learn') return renderLearn();
+  if(seg === 'about') return renderAbout();
+  if(seg === 'admin') return renderAdmin();
+  return renderHome();
+}
+
+function esc(s){
+  var d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
+function toast(msg){
+  var host = document.getElementById('toastHost');
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  host.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3600);
+}
+
+/* =========================================================
+   HOME
+   ========================================================= */
+function renderHome(){
+  var stats = computeStats();
+  mainEl.innerHTML =
+  '<section class="hero">'+
+    '<div class="hero-glass">'+
+      '<div>'+
+        '<div class="hero-eyebrow">A student-built preservation project</div>'+
+        '<h1>Preserve Kashmiri,<br><em>one word at a time.</em></h1>'+
+        '<p class="lede">A community-built digital archive for learning, documenting, and preserving Kashmiri language, pronunciation, grammar, and regional expressions.</p>'+
+        '<div class="hero-actions">'+
+          '<a href="#/dictionary" class="btn btn-primary">Explore the dictionary</a>'+
+          '<a href="#/contribute" class="btn btn-outline">Contribute</a>'+
+          '<a href="#/about" class="btn btn-ghost">Learn about the project →</a>'+
+        '</div>'+
+      '</div>'+
+      '<div class="hero-art"><svg class="paisley draw" viewBox="0 0 200 220"><path d="M100 10 C160 10 175 70 150 110 C130 142 138 165 115 182 C80 205 30 175 40 130 C48 95 65 10 100 10 Z"/><path d="M100 40 C130 40 138 75 120 98" /><circle cx="103" cy="34" r="4" fill="var(--teal-deep)" stroke="none"/></svg></div>'+
+    '</div>'+
+  '</section>'+
+
+  '<section class="stats-strip reveal">'+ statBlock(stats) +'</section>'+
+
+  '<section style="margin-top:56px;" class="reveal">'+
+    '<div class="eyebrow-sm">The idea</div>'+
+    '<h2 style="font-size:22px;max-width:60ch;">Learn it. Speak it. Document it. Preserve it.</h2>'+
+    '<div class="pillars">'+
+      pillar('01','Search & Learn','Look up words between English and Kashmiri, with easy phonetics, IPA, and native audio wherever it exists.')+
+      pillar('02','Understand Grammar','Every plural, case, and conjugated form is generated from verified rules — never guessed — and traceable back to its source.')+
+      pillar('03','Contribute','Submit words, phrases, pronunciations, and regional variants. Nothing goes live until it has been reviewed.')+
+      pillar('04','Preserve Dialects','Regional and dialectal variation is treated as a feature of the language, not an error to correct away.')+
+    '</div>'+
+  '</section>'+
+
+  '<div class="divider-row"><div class="rule"></div><svg class="paisley" width="26" height="26" viewBox="0 0 40 40" style="color:var(--line-strong)"><path d="M20 6 C30 6 32 16 26 22 C22 26 24 30 20 32 C13 34 8 28 10 20 C11 15 15 6 20 6 Z"/></svg><div class="rule"></div></div>'+
+
+  '<section class="reveal">'+
+    '<div class="section-head">'+
+      '<div><h2>Recently documented</h2><div class="desc">The newest entries in the archive.</div></div>'+
+      '<a href="#/dictionary" class="btn btn-outline btn-sm">View full dictionary</a>'+
+    '</div>'+
+    (state.entries.length ? renderEntryList(state.entries.slice(-5).reverse()) : emptyState('dictionary'))+
+  '</section>';
+
+  attachRoleSelect();
+}
+
+function statBlock(stats){
+  var items = [
+    [stats.words,'Words documented'],
+    [stats.verified,'Verified entries'],
+    [stats.audio,'Audio recordings'],
+    [stats.contributors,'Contributors'],
+    [stats.examples,'Example sentences']
+  ];
+  return items.map(function(it){
+    return '<div class="stat"><div class="n">'+it[0]+'</div><div class="l">'+it[1]+'</div></div>';
+  }).join('');
+}
+
+function computeStats(){
+  var words = state.entries.length;
+  var verified = state.entries.filter(function(e){return e.verificationStatus==='verified';}).length;
+  var audio = state.entries.reduce(function(a,e){return a+(e.audio?e.audio.length:0);},0);
+  var contribSet = {};
+  state.entries.forEach(function(e){ (e.contributors||[]).forEach(function(c){contribSet[c]=1;}); });
+  var examples = state.entries.reduce(function(a,e){return a+(e.examples?e.examples.length:0);},0);
+  return {words:words, verified:verified, audio:audio, contributors:Object.keys(contribSet).length, examples:examples};
+}
+
+function pillar(num, title, desc){
+  return '<div class="pillar"><div class="num">'+num+'</div><h3>'+title+'</h3><p>'+desc+'</p></div>';
+}
+
+function emptyState(kind){
+  if(kind === 'dictionary'){
+    return '<div class="empty-state">'+
+      '<h3>The dictionary is just getting started.</h3>'+
+      '<p>Be one of the first people to contribute a Kashmiri word to the archive.</p>'+
+      '<a href="#/contribute" class="btn btn-primary">Add a word</a>'+
+    '</div>';
+  }
+  return '<div class="empty-state"><p>Nothing here yet.</p></div>';
+}
+
+/* =========================================================
+   DICTIONARY
+   ========================================================= */
+function renderDictionary(){
+  var q = state.search.trim().toLowerCase();
+  var filtered = state.entries.filter(function(e){
+    var matches = true;
+    if(q){
+      var hay = state.direction === 'en-ks' ? (e.meaning||'') : (e.lemma||'')+' '+(e.transliteration||'');
+      matches = hay.toLowerCase().indexOf(q) !== -1 || (e.meaning||'').toLowerCase().indexOf(q)!==-1 || (e.transliteration||'').toLowerCase().indexOf(q)!==-1;
+    }
+    if(matches && state.posFilter !== 'all'){
+      matches = e.pos === state.posFilter;
+    }
+    return matches;
+  });
+
+  var posOptions = Array.from(new Set(state.entries.map(function(e){return e.pos;}).filter(Boolean)));
+
+  mainEl.innerHTML =
+  '<section style="padding-top:38px;">'+
+    '<div class="eyebrow-sm">Dictionary</div>'+
+    '<h2 style="font-size:26px;">Search Kashmiri or English</h2>'+
+    '<div class="search-shell" style="margin-top:18px;">'+
+      '<div class="search-box">'+
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'+
+        '<input id="searchInput" type="text" placeholder="Search Kashmiri or English…" value="'+esc(state.search)+'" aria-label="Search the dictionary">'+
+      '</div>'+
+      '<div class="dir-toggle" role="group" aria-label="Search direction">'+
+        '<button data-dir="en-ks" class="'+(state.direction==='en-ks'?'active':'')+'">English → Kashmiri</button>'+
+        '<button data-dir="ks-en" class="'+(state.direction==='ks-en'?'active':'')+'">Kashmiri → English</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="filters-row" id="posFilters">'+
+      '<button class="chip '+(state.posFilter==='all'?'active':'')+'" data-pos="all">All parts of speech</button>'+
+      posOptions.map(function(p){return '<button class="chip '+(state.posFilter===p?'active':'')+'" data-pos="'+esc(p)+'">'+esc(p)+'</button>';}).join('')+
+    '</div>'+
+    '<div class="result-count">'+filtered.length+' result'+(filtered.length===1?'':'s')+'</div>'+
+    (filtered.length ? renderEntryList(filtered) : (state.entries.length ? '<div class="empty-state"><h3>No matches.</h3><p>Try a different search term, or contribute the word yourself.</p><a href="#/contribute" class="btn btn-primary">Add a word</a></div>' : emptyState('dictionary')))+
+  '</section>';
+
+  document.getElementById('searchInput').addEventListener('input', function(e){
+    state.search = e.target.value;
+    renderDictionary();
+    // restore focus + caret
+    var el = document.getElementById('searchInput');
+    el.focus();
+    el.selectionStart = el.selectionEnd = el.value.length;
+  });
+  document.querySelectorAll('[data-dir]').forEach(function(btn){
+    btn.addEventListener('click', function(){ state.direction = btn.dataset.dir; renderDictionary(); });
+  });
+  document.querySelectorAll('#posFilters [data-pos]').forEach(function(btn){
+    btn.addEventListener('click', function(){ state.posFilter = btn.dataset.pos; renderDictionary(); });
+  });
+}
+
+function renderEntryList(list){
+  return '<div class="entry-list">' + list.map(function(e){
+    var verBadge = e.verificationStatus==='verified' ? '<span class="tag verified">Verified</span>' : '<span class="tag unverified">Unverified</span>';
+    var demoBadge = e.isDemo ? '<span class="tag demo">Demo entry</span>' : '';
+    return '<a class="entry-card" href="#/entry/'+e.id+'">'+
+      '<div class="ks">'+esc(e.lemma)+'<span class="translit">'+esc(e.transliteration||'')+'</span></div>'+
+      '<div class="meaning">'+esc(e.meaning)+'</div>'+
+      '<div class="phon mono">'+esc(e.phoneticEasy||'—')+'</div>'+
+      '<div class="tag-row"><span class="tag pos">'+esc(e.pos||'—')+'</span>'+verBadge+demoBadge+'</div>'+
+    '</a>';
+  }).join('') + '</div>';
+}
+
+/* =========================================================
+   ENTRY DETAIL
+   ========================================================= */
+function renderEntryDetail(id){
+  var e = state.entries.find(function(x){return x.id===id;});
+  if(!e){
+    mainEl.innerHTML = '<div class="empty-state" style="margin-top:40px;"><h3>Entry not found.</h3><p>It may have been merged or removed.</p><a href="#/dictionary" class="btn btn-primary">Back to dictionary</a></div>';
+    return;
+  }
+  var plural = grammarEngine.generatePlural(e, state.rules);
+
+  mainEl.innerHTML =
+  '<a class="back-link" href="#/dictionary">← Back to dictionary</a>'+
+  '<div class="entry-head">'+
+    '<div>'+
+      '<div class="ks-big">'+esc(e.lemma)+'</div>'+
+      '<div class="translit-big mono">'+esc(e.transliteration||'')+'</div>'+
+      '<div class="meaning-big">'+esc(e.meaning)+'</div>'+
+    '</div>'+
+    '<div class="tag-row">'+
+      (e.verificationStatus==='verified' ? '<span class="tag verified">Verified</span>' : '<span class="tag unverified">Unverified</span>')+
+      (e.isDemo ? '<span class="tag demo">Demonstration entry</span>' : '')+
+    '</div>'+
+  '</div>'+
+  (e.isDemo ? '<div class="demo-callout"><span>◆</span><span><b>Demonstration entry.</b> This record uses placeholder data to show how the archive is structured — it is not verified Kashmiri vocabulary. Replace it by contributing real, community-sourced information.</span></div>' : '')+
+
+  '<div class="meta-grid">'+
+    metaItem('Part of speech', e.pos)+
+    metaItem('Gender', e.gender)+
+    metaItem('Dialect / region', e.region)+
+    metaItem('Easy pronunciation', e.phoneticEasy, true)+
+    metaItem('IPA', e.ipa || 'IPA not yet documented.')+
+    metaItem('Contributors', (e.contributors||[]).join(', ') || 'Community contribution')+
+  '</div>'+
+
+  '<div class="section-block">'+
+    '<h3>Audio</h3>'+
+    (e.audio && e.audio.length ? renderAudioList(e.audio) :
+      '<div class="empty-state"><h3 style="font-size:15px;">No recordings yet.</h3><p>Be the first to add a native pronunciation for this word.</p><a href="#/contribute" class="btn btn-outline btn-sm">Add pronunciation</a></div>')+
+  '</div>'+
+
+  '<div class="section-block">'+
+    '<h3>Grammar — generated forms</h3>'+
+    '<div class="grammar-box">'+
+      '<div class="grammar-row">'+
+        '<span>Plural</span>'+
+        (plural.form ?
+          '<span><span class="grammar-form">'+esc(plural.form)+'</span> '+
+            '<span class="source-note">'+(plural.source==='irregular'?'Irregular / documented form':'Generated from '+esc(plural.ruleName)+' · v'+plural.ruleVersion)+
+            (plural.source==='rule' ? ' <button class="trace-link" data-trace="'+esc(plural.ruleId)+'">trace rule</button>' : '')+
+            '</span></span>'
+          : '<span class="undocumented">Plural form has not yet been documented.</span>')+
+      '</div>'+
+      '<div class="grammar-row"><span>Grammatical case</span><span class="undocumented">Awaiting community verification.</span></div>'+
+      '<div class="grammar-row"><span>Verb conjugation</span><span class="undocumented">'+(e.pos==='verb' ? 'Awaiting community verification.' : 'Not applicable to this part of speech.')+'</span></div>'+
+    '</div>'+
+    '<p class="notice" style="margin-top:10px;">Forms are generated by a data-driven grammar engine from verified rules — never guessed by AI. See <a href="#/about" style="text-decoration:underline;">how the grammar engine works</a>.</p>'+
+  '</div>'+
+
+  '<div class="section-block">'+
+    '<h3>Example sentences</h3>'+
+    (e.examples && e.examples.length ? e.examples.map(function(ex){
+      return '<div class="example-card"><div class="ex-ks">'+esc(ex.ks)+'</div><div class="ex-en">'+esc(ex.en)+'</div><div class="ex-ph mono">'+esc(ex.phonetic||'')+'</div></div>';
+    }).join('') : '<div class="empty-state"><p>No example sentences yet.</p><a href="#/contribute" class="btn btn-outline btn-sm">Add an example</a></div>')+
+  '</div>'+
+
+  '<div class="section-block">'+
+    '<h3>Regional variations</h3>'+
+    '<div class="empty-state"><p>No regional variants documented yet for this word.</p><a href="#/contribute" class="btn btn-outline btn-sm">Add a regional variant</a></div>'+
+  '</div>'+
+
+  '<div class="section-block">'+
+    '<h3>Revision history</h3>'+
+    '<div class="grammar-box">'+
+      (e.revisions||[]).map(function(rv){
+        return '<div class="grammar-row"><span>v'+rv.version+' — '+esc(rv.note)+'</span><span class="source-note">'+esc(rv.date)+'</span></div>';
+      }).join('')+
+    '</div>'+
+  '</div>'+
+
+  '<div class="section-block">'+
+    '<h3>Something wrong here?</h3>'+
+    '<button class="btn btn-outline btn-sm" id="reportBtn">Is something wrong? →</button>'+
+    '<div id="correctionForm" class="correction-box" style="display:none;">'+
+      '<div class="field full" style="margin-top:14px;"><label>What needs fixing?</label>'+
+        '<select id="corrType"><option>Incorrect translation</option><option>Incorrect pronunciation</option><option>Incorrect grammar</option><option>Missing information</option><option>Duplicate entry</option><option>Other</option></select>'+
+      '</div>'+
+      '<div class="field full"><label>Details</label><textarea id="corrDetails" placeholder="Describe what should change…"></textarea></div>'+
+      '<button class="btn btn-saffron btn-sm" id="corrSubmit">Submit correction for review</button>'+
+    '</div>'+
+  '</div>';
+
+  document.getElementById('reportBtn').addEventListener('click', function(){
+    var box = document.getElementById('correctionForm');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('corrSubmit').addEventListener('click', async function(){
+    var c = {
+      id: 'contrib-' + Date.now(),
+      type:'correction',
+      entryId: e.id,
+      entryLabel: e.lemma,
+      data:{ corrType: document.getElementById('corrType').value, details: document.getElementById('corrDetails').value },
+      contributorLabel: contributorLabel(),
+      status:'PENDING',
+      submittedAt: new Date().toISOString()
+    };
+    await submitContributionRemote(c);
+    toast('Correction submitted for review. Thank you.');
+    document.getElementById('correctionForm').style.display='none';
+  });
+  var traceBtn = document.querySelector('[data-trace]');
+  if(traceBtn){
+    traceBtn.addEventListener('click', function(){
+      var rule = state.rules.find(function(r){return r.id===traceBtn.dataset.trace;});
+      openModal('Generated form — trace', 
+        '<div class="grammar-row"><span>Generated from</span><span><b>'+esc(e.lemma)+'</b></span></div>'+
+        '<div class="grammar-row"><span>Rule</span><span>'+esc(rule.name)+'</span></div>'+
+        '<div class="grammar-row"><span>Rule version</span><span>v'+rule.version+'</span></div>'+
+        '<div class="grammar-row"><span>Rule status</span><span>'+esc(rule.verificationStatus)+'</span></div>'+
+        '<div class="grammar-row"><span>Generated</span><span>'+new Date().toLocaleString()+'</span></div>'
+      );
+    });
+  }
+}
+
+function metaItem(k,v,mono){
+  return '<div class="meta-item"><div class="k">'+esc(k)+'</div><div class="v'+(mono?' mono':'')+'">'+esc(v||'—')+'</div></div>';
+}
+
+function renderAudioList(audio){
+  return audio.map(function(a, i){
+    var key = a.id || ('a'+i);
+    var speed = state.playbackSpeed[key] || '1x';
+    return '<div class="audio-item">'+
+      '<button class="play-btn" data-audio="'+key+'" aria-label="Play recording">▶</button>'+
+      '<div class="audio-meta"><b>'+esc(a.region||'Region not specified')+'</b>'+esc(a.speaker||'Community contributor')+'</div>'+
+      '<div class="speed-row" role="group" aria-label="Playback speed">'+
+        ['0.75x','1x','1.25x','1.5x'].map(function(s){return '<button class="'+(speed===s?'active':'')+'" data-speed="'+s+'" data-key="'+key+'">'+s+'</button>';}).join('')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+/* =========================================================
+   SPEAK
+   ========================================================= */
+function renderSpeak(){
+  mainEl.innerHTML =
+  '<section style="padding-top:38px;max-width:720px;">'+
+    '<div class="eyebrow-sm">Speak</div>'+
+    '<h2 style="font-size:26px;">Speak Kashmiri</h2>'+
+    '<p style="color:var(--ink-soft);margin-top:10px;">Translate between English and Kashmiri, and eventually practice pronunciation aloud. This tab is built to grow — some tools below are architecture previews rather than finished features.</p>'+
+
+    '<div class="speak-panel" style="margin-top:26px;">'+
+      '<div class="speak-io">'+
+        '<div class="field full"><label>English → Kashmiri</label><textarea id="enInput" placeholder="Type a phrase, e.g. Where are you going?"></textarea></div>'+
+        '<button class="btn btn-primary btn-sm" id="translateBtn">Translate</button>'+
+        '<div id="translateResult" style="margin-top:14px;"></div>'+
+      '</div>'+
+
+      '<div class="speak-io">'+
+        '<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-faint);margin-bottom:10px;">Kashmiri → English (speech)</h3>'+
+        '<div class="empty-state"><p><span class="ai-tag">Coming soon</span></p><p style="margin-top:10px;">Kashmiri speech recognition is not currently available with any connected provider. The pipeline (audio → recognition → transcription → translation) is designed and ready to plug in once a provider supports it.</p></div>'+
+      '</div>'+
+
+      '<div class="speak-io">'+
+        '<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-faint);margin-bottom:10px;">Voice learning — hear, repeat, compare</h3>'+
+        '<p style="font-size:13px;color:var(--ink-soft);">Hear a native recording, record yourself repeating it, and compare.</p>'+
+        '<p style="margin-top:10px;"><span class="ai-tag">Pronunciation comparison is coming soon.</span></p>'+
+      '</div>'+
+    '</div>'+
+  '</section>';
+
+  document.getElementById('translateBtn').addEventListener('click', function(){
+    var q = document.getElementById('enInput').value.trim().toLowerCase();
+    var match = state.entries.find(function(e){ return q && e.meaning.toLowerCase().indexOf(q) !== -1; });
+    var box = document.getElementById('translateResult');
+    if(match){
+      box.innerHTML = '<div class="panel" style="padding:14px 16px;">'+
+        '<div class="tag verified" style="margin-bottom:8px;display:inline-block;">Verified dictionary translation</div>'+
+        '<div class="ks-big" style="font-size:22px;">'+esc(match.lemma)+'</div>'+
+        '<div class="mono" style="font-size:12px;color:var(--ink-faint);margin-top:4px;">'+esc(match.phoneticEasy||'')+'</div>'+
+      '</div>';
+    } else {
+      box.innerHTML = '<div class="panel" style="padding:14px 16px;">'+
+        '<div class="ai-tag" style="margin-bottom:8px;">AI-generated — requires human verification</div>'+
+        '<p style="font-size:13.5px;color:var(--ink-soft);">No verified dictionary match was found. A full AI translation pipeline is not enabled in this preview, so nothing has been guessed here — try a word already in the dictionary, or contribute this phrase.</p>'+
+      '</div>';
+    }
+  });
+}
+
+/* =========================================================
+   CONTRIBUTE
+   ========================================================= */
+var CONTRIB_TYPES = [
+  {id:'word', t:'Add a word', d:'A single vocabulary entry.'},
+  {id:'phrase', t:'Add a phrase', d:'A short common phrase.'},
+  {id:'sentence', t:'Add a sentence', d:'A full example sentence.'},
+  {id:'pronunciation', t:'Add pronunciation', d:'Audio for an existing entry.'},
+  {id:'grammar', t:'Add grammar information', d:'Case, gender, or conjugation notes.'},
+  {id:'idiom', t:'Add an idiom', d:'A figurative expression.'},
+  {id:'cultural', t:'Cultural expression', d:'A proverb, saying, or tradition.'},
+  {id:'regional', t:'Regional variant', d:'A dialect-specific form.'},
+  {id:'correction', t:'Suggest a correction', d:'Flag an issue in an existing entry.'}
+];
+
+function contributorLabel(){
+  return state.role === 'visitor' ? 'Visitor (please sign in to contribute)' : (state.role === 'admin' ? 'Administrator' : 'Community contributor');
+}
+
+/* Submits one contribution to the shared queue. When a backend is
+   deployed, this appends it server-side (via /api/contribute) so two
+   people submitting from two different phones at the same moment
+   can't overwrite each other — each request only adds its own item.
+   Falls back to the older full-array save for offline/standalone use. */
+async function submitContributionRemote(c){
+  state.contributions.push(c); // optimistic local update, instant feedback
+  if(await probeRemoteAPI()){
+    try{
+      var res = await fetch('/api/contribute', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({contribution:c})
+      });
+      if(res.ok) return true;
+    }catch(e){ /* fall through */ }
+  }
+  await sSet(K.contributions, state.contributions, true);
+  return true;
+}
+
+function renderContribute(){
+  if(state.role === 'visitor'){
+    mainEl.innerHTML = '<section style="padding-top:60px;max-width:520px;">'+
+      '<div class="eyebrow-sm">Contribute</div>'+
+      '<h2 style="font-size:24px;">Sign in to contribute</h2>'+
+      '<p style="color:var(--ink-soft);margin-top:10px;">Contributions are tied to an account so submissions can be tracked and reviewed. Switch the "Viewing as" selector above to <b>Contributor</b> to try the submission flow in this preview.</p>'+
+    '</section>';
+    return;
+  }
+
+  mainEl.innerHTML =
+  '<section style="padding-top:38px;">'+
+    '<div class="eyebrow-sm">Contribute</div>'+
+    '<h2 style="font-size:26px;">Add to the archive</h2>'+
+    '<p style="color:var(--ink-soft);margin-top:8px;max-width:60ch;">Choose what you would like to contribute. Everything submitted here is reviewed by an administrator before it appears publicly.</p>'+
+
+    '<div class="contrib-type-grid" id="contribTypeGrid">'+
+      CONTRIB_TYPES.map(function(c){
+        return '<button class="contrib-type '+(state.contribType===c.id?'active':'')+'" data-type="'+c.id+'"><div class="t">'+c.t+'</div><div class="d">'+c.d+'</div></button>';
+      }).join('')+
+    '</div>'+
+
+    '<div id="contribFormHost"></div>'+
+  '</section>';
+
+  document.querySelectorAll('#contribTypeGrid [data-type]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.contribType = btn.dataset.type;
+      renderContribute();
+    });
+  });
+
+  renderContribFormBody();
+}
+
+function renderContribFormBody(){
+  var host = document.getElementById('contribFormHost');
+  var isCorrection = state.contribType === 'correction';
+  var isAudioOnly = state.contribType === 'pronunciation';
+
+  host.innerHTML =
+  '<div class="panel" style="padding:26px;margin-top:22px;">'+
+    (isCorrection ?
+      '<p style="font-size:13.5px;color:var(--ink-soft);">To suggest a correction, open the relevant word\'s page and use the "Is something wrong?" button there.</p><a href="#/dictionary" class="btn btn-outline btn-sm" style="margin-top:12px;">Go to dictionary</a>'
+      :
+      '<div class="form-grid">'+
+        (!isAudioOnly ? field('Kashmiri','ksWord','text','e.g. a placeholder / native-script entry') : '')+
+        (!isAudioOnly ? field('English meaning','enMeaning','text','What does it mean?') : '')+
+        (!isAudioOnly ? field('Easy phonetic pronunciation','phonEasy','text','Beginner-friendly, e.g. kə-TAAB') : '')+
+        (!isAudioOnly ? field('IPA (optional)','ipa','text','Leave blank if unknown') : '')+
+        (!isAudioOnly && (state.contribType==='word') ? selectField('Part of speech','pos',['noun','verb','adjective','pronoun','interjection','other']) : '')+
+        (!isAudioOnly && (state.contribType==='word') ? field('Gender (optional)','gender','text','') : '')+
+        field('Region / dialect (optional)','region','text','Where is this used?')+
+        (!isAudioOnly ? field('Example sentence (optional)','exampleKs','text','') : '')+
+        (!isAudioOnly ? field('English translation of example (optional)','exampleEn','text','') : '')+
+        (!isAudioOnly ? fieldArea('Grammar notes (optional)','grammarNotes') : '')+
+        fieldArea('Additional notes (optional)','addlNotes')+
+      '</div>'+
+
+      '<div class="section-block" style="margin-top:8px;margin-bottom:0;">'+
+        '<h3>Audio recording (optional)</h3>'+
+        '<div class="rec-box" id="recBox">'+
+          '<button class="btn btn-outline btn-sm" id="recStart">● Record</button>'+
+          '<button class="btn btn-outline btn-sm" id="recStop" disabled>■ Stop</button>'+
+          '<span id="recStatus" style="font-size:12.5px;color:var(--ink-faint);">Not recording</span>'+
+          '<label class="btn btn-ghost btn-sm" style="margin-left:auto;">Upload audio instead<input type="file" id="audioUpload" accept="audio/*" style="display:none;"></label>'+
+        '</div>'+
+        '<audio id="recPlayback" controls style="display:none;margin-top:10px;width:100%;"></audio>'+
+        '<p class="notice" style="margin-top:8px;">Please only upload recordings that you have permission to share. In this preview, recordings are kept only for this browser session and are not stored permanently.</p>'+
+      '</div>'+
+
+      '<div id="dupWarning"></div>'+
+
+      '<div class="form-footer">'+
+        '<div class="notice">Your contribution will be reviewed before appearing publicly.</div>'+
+        '<button class="btn btn-saffron" id="submitContrib">Submit for review</button>'+
+      '</div>'
+    )+
+  '</div>';
+
+  if(isCorrection) return;
+
+  setupRecorder();
+
+  document.getElementById('ksWord') && document.getElementById('ksWord').addEventListener('blur', checkDuplicates);
+  document.getElementById('enMeaning') && document.getElementById('enMeaning').addEventListener('blur', checkDuplicates);
+
+  document.getElementById('submitContrib').addEventListener('click', submitContribution);
+}
+
+function field(label, id, type, placeholder){
+  return '<div class="field"><label for="'+id+'">'+label+'</label><input type="'+type+'" id="'+id+'" placeholder="'+esc(placeholder||'')+'"></div>';
+}
+function fieldArea(label, id){
+  return '<div class="field full"><label for="'+id+'">'+label+'</label><textarea id="'+id+'"></textarea></div>';
+}
+function selectField(label, id, options){
+  return '<div class="field"><label for="'+id+'">'+label+'</label><select id="'+id+'"><option value="">Select…</option>'+options.map(function(o){return '<option value="'+o+'">'+o+'</option>';}).join('')+'</select></div>';
+}
+
+function checkDuplicates(){
+  var ks = (document.getElementById('ksWord')||{value:''}).value.trim().toLowerCase();
+  var en = (document.getElementById('enMeaning')||{value:''}).value.trim().toLowerCase();
+  if(!ks && !en) return;
+  var matches = state.entries.filter(function(e){
+    return (ks && e.lemma.toLowerCase().indexOf(ks) !== -1) || (en && e.meaning.toLowerCase().indexOf(en) !== -1);
+  });
+  var box = document.getElementById('dupWarning');
+  if(matches.length){
+    box.innerHTML = '<div class="demo-callout" style="margin-top:16px;"><span>◆</span><span><b>We may already have this word.</b> '+
+      matches.map(function(m){return '<a href="#/entry/'+m.id+'" style="text-decoration:underline;">'+esc(m.lemma)+'</a>';}).join(', ')+
+      '. If this is a different pronunciation or regional variant, that\'s welcome — go ahead and submit.</span></div>';
+  } else {
+    box.innerHTML = '';
+  }
+}
+
+function setupRecorder(){
+  var startBtn = document.getElementById('recStart');
+  var stopBtn = document.getElementById('recStop');
+  var status = document.getElementById('recStatus');
+  var playback = document.getElementById('recPlayback');
+  var upload = document.getElementById('audioUpload');
+
+  startBtn.addEventListener('click', async function(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      status.textContent = 'Microphone access is not available in this preview — use "Upload audio instead."';
+      return;
+    }
+    try{
+      var stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      var chunks = [];
+      var mr = new MediaRecorder(stream);
+      mr.ondataavailable = function(e){ chunks.push(e.data); };
+      mr.onstop = function(){
+        var blob = new Blob(chunks, {type:'audio/webm'});
+        var url = URL.createObjectURL(blob);
+        playback.src = url;
+        playback.style.display = 'block';
+        state.recording.blobUrl = url;
+        stream.getTracks().forEach(function(t){t.stop();});
+        status.textContent = 'Recording captured (kept for this session only).';
+      };
+      mr.start();
+      state.recording.mediaRecorder = mr;
+      startBtn.disabled = true; stopBtn.disabled = false;
+      status.innerHTML = '<span class="rec-dot live" style="display:inline-block;vertical-align:middle;margin-right:6px;"></span>Recording…';
+    }catch(err){
+      status.textContent = 'Microphone access was blocked or unavailable — use "Upload audio instead."';
+    }
+  });
+
+  stopBtn.addEventListener('click', function(){
+    if(state.recording.mediaRecorder && state.recording.mediaRecorder.state !== 'inactive'){
+      state.recording.mediaRecorder.stop();
+    }
+    startBtn.disabled = false; stopBtn.disabled = true;
+  });
+
+  upload.addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if(!f) return;
+    var url = URL.createObjectURL(f);
+    playback.src = url;
+    playback.style.display = 'block';
+    state.recording.blobUrl = url;
+    status.textContent = 'File attached: ' + f.name + ' (kept for this session only).';
+  });
+}
+
+async function submitContribution(){
+  var t = state.contribType;
+  var data = {};
+  ['ksWord','enMeaning','phonEasy','ipa','pos','gender','region','exampleKs','exampleEn','grammarNotes','addlNotes'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) data[id] = el.value.trim();
+  });
+  data.hasAudio = !!state.recording.blobUrl;
+
+  if(t !== 'pronunciation' && !data.ksWord && !data.enMeaning){
+    toast('Please add at least a Kashmiri word or an English meaning.');
+    return;
+  }
+
+  var c = {
+    id:'contrib-'+Date.now(),
+    type:t,
+    data:data,
+    contributorLabel: contributorLabel(),
+    status:'PENDING',
+    submittedAt: new Date().toISOString()
+  };
+  await submitContributionRemote(c);
+  toast('Thank you — your contribution was submitted for review.');
+  state.recording = {active:false, blobUrl:null, stream:null, mediaRecorder:null, chunks:[]};
+  renderContribute();
+}
+
+/* =========================================================
+   LEARN
+   ========================================================= */
+var LEARN_SECTIONS = {
+  beginner:['Pronunciation basics','Greetings','Numbers','Common phrases','Everyday conversation'],
+  vocabulary:['Family','Food','Household','Nature'],
+  grammar:['Nouns & gender','Cases','Verb conjugation','Dialects & regional forms']
+};
+var learnTab = 'beginner';
+
+function renderLearn(){
+  mainEl.innerHTML =
+  '<section style="padding-top:38px;">'+
+    '<div class="eyebrow-sm">Learn</div>'+
+    '<h2 style="font-size:26px;">Learn Kashmiri</h2>'+
+    '<p style="color:var(--ink-soft);margin-top:8px;max-width:60ch;">Structured lessons built on the same dictionary and grammar data as the rest of the archive — nothing is duplicated.</p>'+
+    '<div class="photo-banner reveal" style="background-image:url(\'https://images.pexels.com/photos/12750077/pexels-photo-12750077.jpeg?auto=compress&cs=tinysrgb&w=1600\');">'+
+      '<div class="cap"><b>Learning is part of preservation.</b>Every lesson here draws its examples straight from the living dictionary.</div>'+
+    '</div>'+
+    '<div class="tab-strip" id="learnTabs">'+
+      '<button data-t="beginner" class="'+(learnTab==='beginner'?'active':'')+'">Beginner Kashmiri</button>'+
+      '<button data-t="vocabulary" class="'+(learnTab==='vocabulary'?'active':'')+'">Vocabulary</button>'+
+      '<button data-t="grammar" class="'+(learnTab==='grammar'?'active':'')+'">Grammar</button>'+
+    '</div>'+
+    '<div class="lesson-grid reveal" id="lessonGrid">'+
+      LEARN_SECTIONS[learnTab].map(function(l){
+        return '<div class="lesson-card"><h4>'+l+'</h4><p>Pulls examples live from verified dictionary entries as they\'re added.</p></div>';
+      }).join('')+
+    '</div>'+
+  '</section>';
+
+  document.querySelectorAll('#learnTabs [data-t]').forEach(function(btn){
+    btn.addEventListener('click', function(){ learnTab = btn.dataset.t; renderLearn(); });
+  });
+}
+
+/* =========================================================
+   ABOUT
+   ========================================================= */
+function renderAbout(){
+  mainEl.innerHTML =
+  '<section style="padding-top:38px;">'+
+    '<div class="eyebrow-sm">About</div>'+
+    '<h2 style="font-size:26px;">Why this archive exists</h2>'+
+    '<div class="photo-banner reveal" style="background-image:url(\'https://images.pexels.com/photos/15961864/pexels-photo-15961864.jpeg?auto=compress&cs=tinysrgb&w=1600\');margin-top:20px;">'+
+      '<div class="cap"><b>Dal Lake, Srinagar.</b>A language, like a lake, is kept alive by the people who still move across it.</div>'+
+    '</div>'+
+    '<div class="about-body" style="margin-top:8px;">'+
+      '<p>Zabaan is a community-oriented digital archive for the Kashmiri language, started as a high-school preservation project. The goal isn\'t a novelty translator — it\'s a structured linguistic foundation that can grow into something Kashmiri speakers, learners, and researchers can rely on for years.</p>'+
+      '<h3>How the grammar engine works</h3>'+
+      '<p>Every word in the archive is separated into three layers: <b>data</b> (facts about one word), <b>rules</b> (general grammatical patterns, defined and versioned by administrators), and <b>generated forms</b> (a word combined with a rule). If a rule doesn\'t exist yet, or a form hasn\'t been documented, the site says so plainly rather than guessing. Irregular and manually documented forms always take precedence over a generated one.</p>'+
+      '<h3>Principles</h3>'+
+      '<ul>'+
+        '<li>Community first — the archive is built from contributions, not scraped from elsewhere.</li>'+
+        '<li>Accuracy over speed — nothing publishes without review.</li>'+
+        '<li>Preservation over automation — dialect and regional variation are preserved, not standardized away.</li>'+
+        '<li>Native speakers matter — recordings and corrections from the community carry the most weight.</li>'+
+        '<li>AI assists; humans verify — any AI-generated suggestion is clearly labeled and never authoritative on its own.</li>'+
+      '</ul>'+
+      '<h3>A note on the demo data</h3>'+
+      '<p>This preview ships with a handful of clearly labeled demonstration entries so the grammar engine and review workflow can be seen in action. None of it is presented as verified Kashmiri vocabulary — real content comes from contributors.</p>'+
+    '</div>'+
+  '</section>';
+}
+
+/* =========================================================
+   ADMIN
+   ========================================================= */
+function renderAdmin(){
+  if(state.role !== 'admin'){
+    mainEl.innerHTML = '<div class="admin-locked"><h2 style="font-size:22px;">Administrator access required</h2><p style="color:var(--ink-faint);margin-top:10px;">Switch "Viewing as" above to <b>Administrator</b> to preview the review dashboard.</p></div>';
+    return;
+  }
+  if(!state.adminUnlocked){
+    mainEl.innerHTML =
+    '<div class="admin-locked">'+
+      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--teal-deep);margin-bottom:14px;"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>'+
+      '<h2 style="font-size:22px;">Enter admin password</h2>'+
+      '<p style="color:var(--ink-faint);margin-top:8px;">Checked on the server when this site is deployed with its backend function; otherwise this is a local preview gate only.</p>'+
+      '<div style="max-width:260px;margin:20px auto 0;text-align:left;">'+
+        '<div class="field"><label for="adminPw" class="sr-only">Admin password</label>'+
+        '<input type="password" id="adminPw" placeholder="Password" autocomplete="off" style="text-align:center;letter-spacing:2px;"></div>'+
+        '<button class="btn btn-primary" id="adminPwSubmit" style="width:100%;margin-top:10px;">Unlock dashboard</button>'+
+        '<p id="adminPwError" style="color:var(--danger);font-size:12.5px;margin-top:10px;display:none;">Incorrect password.</p>'+
+      '</div>'+
+    '</div>';
+    var input = document.getElementById('adminPw');
+    var submit = function(){
+      checkAdminPassword(input.value).then(function(ok){
+        if(ok){
+          state.adminUnlocked = true;
+          Promise.all([
+            sGet(K.entries, true),
+            sGet(K.rules, true),
+            sGet(K.contributions, true)
+          ]).then(function(vals){
+            if(vals[0]) state.entries = vals[0];
+            if(vals[1]) state.rules = vals[1];
+            if(vals[2]) state.contributions = vals[2];
+            renderAdmin();
+          }).catch(function(){
+            renderAdmin();
+          });
+        } else {
+          document.getElementById('adminPwError').style.display = 'block';
+          input.value = '';
+          input.focus();
+        }
+      });
+    };
+    document.getElementById('adminPwSubmit').addEventListener('click', submit);
+    input.addEventListener('keydown', function(e){ if(e.key==='Enter') submit(); });
+    input.focus();
+    return;
+  }
+  var pending = state.contributions.filter(function(c){return c.status==='PENDING';});
+  var approved = state.contributions.filter(function(c){return c.status==='APPROVED';});
+  var rejected = state.contributions.filter(function(c){return c.status==='REJECTED';});
+  var audioPending = pending.filter(function(c){return c.type==='pronunciation' || (c.data && c.data.hasAudio);});
+
+  mainEl.innerHTML =
+  '<section style="padding-top:38px;">'+
+    '<div class="section-head" style="align-items:center;">'+
+      '<div><div class="eyebrow-sm">Admin</div><h2 style="font-size:26px;">Review dashboard</h2></div>'+
+      '<div class="action-btns">'+
+        '<button class="btn btn-outline btn-sm" id="exportDataBtn">Export backup (.json)</button>'+
+        '<label class="btn btn-outline btn-sm">Import backup<input type="file" id="importDataInput" accept="application/json" style="display:none;"></label>'+
+        '<button class="btn btn-outline btn-sm" id="lockAdminBtn">Lock dashboard</button>'+
+      '</div>'+
+    '</div>'+
+    '<p class="notice" style="margin-top:-10px;margin-bottom:20px;">Data auto-saves in this browser as you go. Export a backup before making or requesting code changes to the site — importing it afterward restores every entry, rule, and contribution exactly as they were.</p>'+
+
+    '<div class="admin-stats">'+
+      adminStat(pending.length,'Pending')+
+      adminStat(audioPending.length,'Pending audio')+
+      adminStat(approved.length,'Approved')+
+      adminStat(rejected.length,'Rejected')+
+      adminStat(state.entries.length,'Total entries')+
+      adminStat(state.rules.length,'Grammar rules')+
+    '</div>'+
+
+    '<div class="section-head"><h2 style="font-size:18px;">Review queue</h2></div>'+
+    (pending.length ? renderQueueTable(pending) : '<div class="empty-state"><h3>Queue is empty.</h3><p>Nothing is waiting for review right now.</p></div>')+
+
+    '<div class="section-head" style="margin-top:44px;"><h2 style="font-size:18px;">Recently decided</h2></div>'+
+    (approved.concat(rejected).length ? renderQueueTable(approved.concat(rejected).slice(-8).reverse(), true) : '<p style="color:var(--ink-faint);font-size:13px;">No decisions yet.</p>')+
+  '</section>';
+
+  document.querySelectorAll('[data-review]').forEach(function(btn){
+    btn.addEventListener('click', function(){ openReviewModal(btn.dataset.review); });
+  });
+  document.getElementById('lockAdminBtn').addEventListener('click', function(){
+    state.adminUnlocked = false;
+    renderAdmin();
+  });
+  document.getElementById('exportDataBtn').addEventListener('click', exportBackup);
+  document.getElementById('importDataInput').addEventListener('change', importBackup);
+}
+
+function exportBackup(){
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    source: 'Zabaan preservation archive',
+    entries: state.entries,
+    rules: state.rules,
+    contributions: state.contributions
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'zabaan-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded.');
+}
+
+function importBackup(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(evt){
+    var parsed;
+    try{
+      parsed = JSON.parse(evt.target.result);
+    }catch(err){
+      toast('That file isn\'t valid JSON — import cancelled.');
+      return;
+    }
+    if(!parsed || !Array.isArray(parsed.entries) || !Array.isArray(parsed.rules) || !Array.isArray(parsed.contributions)){
+      toast('That file doesn\'t look like a Zabaan backup — import cancelled.');
+      return;
+    }
+    openModal('Import backup',
+      '<p style="font-size:13.5px;color:var(--ink-soft);">This will replace the current dictionary, grammar rules, and contribution queue with the contents of <b>'+esc(file.name)+'</b> ('+parsed.entries.length+' entries, '+parsed.rules.length+' rules, '+parsed.contributions.length+' contributions). This can\'t be undone.</p>'+
+      '<div class="action-btns" style="margin-top:16px;">'+
+        '<button class="btn btn-primary btn-sm" id="confirmImportBtn">Replace data</button>'+
+        '<button class="btn btn-outline btn-sm" id="cancelImportBtn">Cancel</button>'+
+      '</div>'
+    );
+    document.getElementById('cancelImportBtn').addEventListener('click', closeModal);
+    document.getElementById('confirmImportBtn').addEventListener('click', async function(){
+      state.entries = parsed.entries;
+      state.rules = parsed.rules;
+      state.contributions = parsed.contributions;
+      await sSet(K.entries, state.entries, true);
+      await sSet(K.rules, state.rules, true);
+      await sSet(K.contributions, state.contributions, true);
+      closeModal();
+      toast('Backup imported.');
+      renderAdmin();
+    });
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function adminStat(n,l){
+  return '<div class="admin-stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';
+}
+
+function renderQueueTable(rows, decided){
+  return '<table class="queue"><thead><tr><th>Submission</th><th>Contributor</th><th>Type</th><th>Submitted</th><th>Status</th>'+(decided?'':'<th>Actions</th>')+'</tr></thead><tbody>'+
+    rows.map(function(c){
+      var label = c.data ? (c.data.ksWord || c.data.enMeaning || c.entryLabel || '(untitled)') : (c.entryLabel || '(untitled)');
+      return '<tr>'+
+        '<td>'+esc(label)+'</td>'+
+        '<td>'+esc(c.contributorLabel||'Anonymous')+'</td>'+
+        '<td>'+esc(c.type)+'</td>'+
+        '<td>'+new Date(c.submittedAt).toLocaleDateString()+'</td>'+
+        '<td><span class="status-pill status-'+c.status+'">'+c.status.replace('_',' ')+'</span></td>'+
+        (decided ? '' : '<td><button class="btn btn-outline btn-sm" data-review="'+c.id+'">Review</button></td>')+
+      '</tr>';
+    }).join('')+
+  '</tbody></table>';
+}
+
+function openReviewModal(id){
+  var c = state.contributions.find(function(x){return x.id===id;});
+  if(!c) return;
+  var d = c.data || {};
+  var body =
+    '<div class="diff-box">'+
+      '<div class="diff-col"><h4>Submitted data</h4>'+
+        Object.keys(d).filter(function(k){return d[k] && k!=='hasAudio';}).map(function(k){return '<div style="margin-bottom:6px;"><b style="font-size:11px;color:var(--ink-faint);text-transform:uppercase;">'+k+'</b><br>'+esc(d[k])+'</div>';}).join('') +
+        (d.hasAudio ? '<div class="tag verified" style="margin-top:6px;display:inline-block;">Audio attached</div>' : '')+
+      '</div>'+
+      '<div class="diff-col"><h4>Contributor</h4><p>'+esc(c.contributorLabel)+'</p><h4 style="margin-top:14px;">Submitted</h4><p>'+new Date(c.submittedAt).toLocaleString()+'</p></div>'+
+    '</div>'+
+    '<div class="field full"><label>Reviewer note (required for correction/rejection)</label><textarea id="reviewNote"></textarea></div>'+
+    '<div class="action-btns" style="margin-top:14px;">'+
+      '<button class="btn btn-primary btn-sm" id="approveBtn">Approve</button>'+
+      '<button class="btn btn-outline btn-sm" id="correctBtn">Request correction</button>'+
+      '<button class="btn btn-danger btn-sm" id="rejectBtn">Reject</button>'+
+    '</div>';
+
+  openModal('Review submission', body);
+
+  document.getElementById('approveBtn').addEventListener('click', function(){ decide(c, 'APPROVED'); });
+  document.getElementById('rejectBtn').addEventListener('click', function(){
+    var note = document.getElementById('reviewNote').value.trim();
+    if(!note){ toast('Please add a reason before rejecting.'); return; }
+    decide(c, 'REJECTED', note);
+  });
+  document.getElementById('correctBtn').addEventListener('click', function(){
+    var note = document.getElementById('reviewNote').value.trim();
+    if(!note){ toast('Please describe what needs correcting.'); return; }
+    decide(c, 'NEEDS_CORRECTION', note);
+  });
+}
+
+async function decide(c, status, note){
+  // When a backend is deployed, the decision is applied server-side
+  // against the CURRENT shared queue (not this browser's possibly-
+  // stale copy), so it can't silently clobber a contribution that
+  // arrived from someone else's phone a moment ago.
+  if(await probeRemoteAPI() && adminToken){
+    try{
+      var res = await fetch('/api/decide', {
+        method:'POST',
+        headers:{'Content-Type':'application/json', 'X-Admin-Password':adminToken},
+        body: JSON.stringify({id:c.id, status:status, note:note||''})
+      });
+      if(res.ok){
+        var body = await res.json();
+        state.entries = body.entries;
+        state.contributions = body.contributions;
+        lsSet(K.entries, state.entries);
+        lsSet(K.contributions, state.contributions);
+        closeModal();
+        toast('Submission marked ' + status.replace('_',' ').toLowerCase() + '.');
+        renderAdmin();
+        return;
+      }
+      toast('Could not save that decision — sign out and back into Admin, then try again.');
+      return;
+    }catch(e){
+      toast('Could not reach the shared archive — check your connection and try again.');
+      return;
+    }
+  }
+
+  // Offline / no backend configured yet — local-only fallback.
+  c.status = status;
+  c.reviewNote = note || '';
+  c.decidedAt = new Date().toISOString();
+
+  if(status === 'APPROVED' && (c.type === 'word' || c.type === 'phrase' || c.type === 'sentence')){
+    var d = c.data || {};
+    var newEntry = {
+      id:'entry-'+Date.now(),
+      code:null,
+      isDemo:false,
+      lemma: d.ksWord || '(untitled)',
+      transliteration:'',
+      meaning: d.enMeaning || '',
+      pos: d.pos || 'other',
+      gender: d.gender || null,
+      pluralClass: null,
+      irregularPlural: null,
+      phoneticEasy: d.phonEasy || '',
+      ipa: d.ipa || null,
+      dialect: d.region || '—',
+      region: d.region || 'Unspecified',
+      verificationStatus:'verified',
+      contributors:[c.contributorLabel],
+      examples: d.exampleKs ? [{ks:d.exampleKs, en:d.exampleEn||'', phonetic:'', verified:true}] : [],
+      audio:[],
+      notes: d.addlNotes || '',
+      revisions:[{version:1, note:'Approved from community submission.', date: new Date().toISOString().slice(0,10)}]
+    };
+    state.entries.push(newEntry);
+    await sSet(K.entries, state.entries, true);
+  }
+
+  await sSet(K.contributions, state.contributions, true);
+  closeModal();
+  toast('Submission marked ' + status.replace('_',' ').toLowerCase() + '.');
+  renderAdmin();
+}
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+function openModal(title, bodyHtml){
+  var host = document.getElementById('modalHost');
+  host.innerHTML = '<div class="modal-backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+
+    '<button class="modal-close" id="modalCloseBtn" aria-label="Close">×</button>'+
+    '<h3>'+esc(title)+'</h3>'+bodyHtml+
+  '</div></div>';
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('modalBackdrop').addEventListener('click', function(e){ if(e.target.id==='modalBackdrop') closeModal(); });
+}
+function closeModal(){ document.getElementById('modalHost').innerHTML = ''; }
+
+/* =========================================================
+   GLOBAL EVENT DELEGATION (audio play/speed buttons re-rendered often)
+   ========================================================= */
+document.addEventListener('click', function(e){
+  var playBtn = e.target.closest('[data-audio]');
+  if(playBtn){
+    toast('Playing sample audio is not available for this entry yet — no verified recording has been uploaded.');
+  }
+  var speedBtn = e.target.closest('[data-speed]');
+  if(speedBtn){
+    state.playbackSpeed[speedBtn.dataset.key] = speedBtn.dataset.speed;
+    document.querySelectorAll('[data-key="'+speedBtn.dataset.key+'"]').forEach(function(b){ b.classList.toggle('active', b===speedBtn); });
+  }
+});
+
+/* =========================================================
+   ROLE SWITCH + MOBILE NAV
+   ========================================================= */
+function attachRoleSelect(){
+  var sel = document.getElementById('roleSelect');
+  sel.value = state.role;
+}
+document.getElementById('roleSelect').addEventListener('change', async function(e){
+  var newRole = e.target.value;
+  var prevRole = state.role;
+
+  if(newRole === 'admin'){
+    e.target.value = prevRole; // don't switch yet — hold the visible role until password checks out
+    openModal('Admin password required',
+      '<p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:14px;">Switching to Administrator requires the password. When this site is deployed with its backend function, this is checked on the server. Without a backend configured, this is only a local preview gate.</p>'+
+      '<div class="field"><label for="rolePw" class="sr-only">Admin password</label>'+
+      '<input type="password" id="rolePw" placeholder="Password" autocomplete="off" style="text-align:center;letter-spacing:2px;"></div>'+
+      '<button class="btn btn-primary btn-sm" id="rolePwSubmit" style="width:100%;margin-top:12px;">Unlock</button>'+
+      '<p id="rolePwError" style="color:var(--danger);font-size:12.5px;margin-top:10px;display:none;">Incorrect password.</p>'
+    );
+    var input = document.getElementById('rolePw');
+    var submit = function(){
+      checkAdminPassword(input.value).then(async function(ok){
+        if(ok){
+          state.role = 'admin';
+          state.adminUnlocked = true;
+          document.getElementById('roleSelect').value = 'admin';
+          await sSet(K.role, state.role, false);
+          closeModal();
+          toast('Now viewing as admin.');
+          navigate();
+        } else {
+          document.getElementById('rolePwError').style.display = 'block';
+          input.value = '';
+          input.focus();
+        }
+      });
+    };
+    document.getElementById('rolePwSubmit').addEventListener('click', submit);
+    input.addEventListener('keydown', function(ev){ if(ev.key==='Enter') submit(); });
+    input.focus();
+    return;
+  }
+
+  state.role = newRole;
+  state.adminUnlocked = false;
+  adminToken = null; // drop the in-memory admin credential when leaving admin
+  await sSet(K.role, state.role, false);
+  toast('Now viewing as ' + state.role + '.');
+  navigate();
+});
+document.getElementById('mobileToggle').addEventListener('click', function(){
+  var nav = document.getElementById('primaryNav');
+  var open = nav.classList.toggle('open');
+  this.setAttribute('aria-expanded', open ? 'true':'false');
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+(async function init(){
+  await loadAll();
+  var sel = document.getElementById('roleSelect');
+  sel.value = state.role;
+  document.getElementById('footerDownloadBtn').addEventListener('click', exportBackup);
+  navigate();
+})();
+
+/* =========================================================
+   SCROLL REVEAL — sections/cards expand into place as the
+   page is scrolled, re-scanned automatically after every
+   re-render since #main is rebuilt via innerHTML.
+   ========================================================= */
+(function(){
+  var AUTO_SELECTOR = [
+    'main > section', '.panel', '.pillar', '.entry-card', '.lesson-card',
+    '.meta-grid', '.grammar-box', '.speak-io', '.regional-card', '.diff-col',
+    '.contrib-type', '.my-contrib-row', '.audio-item', '.example-card',
+    '.admin-stat', '.stats-strip', '.photo-banner'
+  ].join(',');
+
+  var io = ('IntersectionObserver' in window) ? new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('revealed');
+        io.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.08, rootMargin:'0px 0px -6% 0px'}) : null;
+
+  function scan(){
+    var els = mainEl.querySelectorAll(AUTO_SELECTOR);
+    els.forEach(function(el, i){
+      if(el.dataset.revealBound) return;
+      el.dataset.revealBound = '1';
+      el.classList.add('reveal');
+      el.style.transitionDelay = Math.min(i * 45, 260) + 'ms';
+      if(io){ io.observe(el); }
+      else { el.classList.add('revealed'); }
+    });
+  }
+
+  var mo = new MutationObserver(function(){ scan(); });
+  mo.observe(mainEl, {childList:true, subtree:false});
+  scan();
+})();
+
+})();
+</script>
+</body>
+</html>

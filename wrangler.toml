@@ -1,0 +1,17 @@
+name = "zabaan"
+main = "src/worker.js"
+compatibility_date = "2026-09-24"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# After the first deployment, add your KV namespace in the Cloudflare
+# dashboard as a Worker binding named ZABAAN_KV.
+#
+# Also add an encrypted Worker secret named ADMIN_PASSWORD.
+#
+# You can alternatively uncomment and fill this in with your real KV ID:
+# [[kv_namespaces]]
+# binding = "ZABAAN_KV"
+# id = "YOUR_KV_NAMESPACE_ID"
