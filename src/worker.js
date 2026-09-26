@@ -1,6 +1,7 @@
 const KEY_ENTRIES = "zabaan-entries-v1";
 const KEY_RULES = "zabaan-plural-rules-v1";
 const KEY_CONTRIBUTIONS = "zabaan-contributions-v1";
+const KEY_AUDIO_PREFIX = "zabaan-audio-v1:";
 
 const WRITE_PROTECTED = new Set([
   KEY_ENTRIES,
@@ -78,6 +79,46 @@ async function handleStore(request, env) {
   return json({ ok: true });
 }
 
+function makeAudioId() {
+  return "audio-" + Date.now() + "-" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
+function dataUrlToBytes(dataUrl) {
+  if (typeof dataUrl !== "string") return null;
+  const match = dataUrl.match(/^data:([^;,]+)?;base64,([A-Za-z0-9+/=\s]+)$/);
+  if (!match) return null;
+  const mimeType = match[1] || "application/octet-stream";
+  const base64 = match[2].replace(/\s/g, "");
+  let binary;
+  try { binary = atob(base64); } catch { return null; }
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return { mimeType, bytes };
+}
+
+async function handleAudio(request, env, audioId) {
+  if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+  if (!audioId || !/^[A-Za-z0-9_-]+$/.test(audioId)) return json({ error: "bad audio id" }, 400);
+  const kv = requireKV(env);
+  if (!kv) return json({ error: "KV namespace not bound" }, 500);
+  const raw = await kv.get(KEY_AUDIO_PREFIX + audioId);
+  if (!raw) return new Response("Audio not found", { status: 404 });
+  const match = raw.match(/^([^|]+)\|([A-Za-z0-9+/=]+)$/);
+  if (!match) return new Response("Invalid audio", { status: 500 });
+  const mimeType = match[1];
+  let binary;
+  try { binary = atob(match[2]); } catch { return new Response("Invalid audio", { status: 500 }); }
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Response(bytes, {
+    headers: {
+      "content-type": mimeType,
+      "cache-control": "public, max-age=31536000, immutable",
+      "accept-ranges": "bytes"
+    }
+  });
+}
+
 async function handleContribute(request, env) {
   if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
 
@@ -85,16 +126,11 @@ async function handleContribute(request, env) {
   if (!kv) return json({ error: "KV namespace not bound" }, 500);
 
   let body;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ error: "bad json" }, 400);
-  }
+  try { body = await request.json(); }
+  catch { return json({ error: "bad json" }, 400); }
 
   const c = body && body.contribution;
-  if (!c || typeof c !== "object" || !c.type) {
-    return json({ error: "bad contribution" }, 400);
-  }
+  if (!c || typeof c !== "object" || !c.type) return json({ error: "bad contribution" }, 400);
 
   const safe = {
     id: "contrib-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
@@ -102,17 +138,39 @@ async function handleContribute(request, env) {
     entryId: c.entryId ? String(c.entryId).slice(0, 100) : undefined,
     entryLabel: c.entryLabel ? String(c.entryLabel).slice(0, 200) : undefined,
     data: (c.data && typeof c.data === "object") ? c.data : {},
-    contributorLabel: c.contributorLabel
-      ? String(c.contributorLabel).slice(0, 100)
-      : "Community contributor",
+    contributorLabel: c.contributorLabel ? String(c.contributorLabel).slice(0, 100) : "Community contributor",
     status: "PENDING",
     submittedAt: new Date().toISOString()
   };
 
   const raw = await kv.get(KEY_CONTRIBUTIONS);
   const list = raw ? JSON.parse(raw) : [];
-  if (list.length >= MAX_QUEUE_LENGTH) {
-    return json({ error: "queue full — please try again later" }, 429);
+  if (list.length >= MAX_QUEUE_LENGTH) return json({ error: "queue full — please try again later" }, 429);
+
+  // Audio is stored separately in KV. The contribution only carries a small reference.
+  const audio = body && body.audio;
+  if (audio) {
+    const parsed = dataUrlToBytes(audio.dataUrl);
+    if (!parsed) return json({ error: "invalid audio data" }, 400);
+    if (parsed.bytes.byteLength < 100) return json({ error: "audio is empty" }, 400);
+    if (parsed.bytes.byteLength > 1_350_000) return json({ error: "audio is too large — keep it under about 1.35 MB" }, 413);
+    const allowed = new Set(["audio/mp4", "audio/webm", "audio/webm;codecs=opus", "audio/ogg", "audio/ogg;codecs=opus", "audio/mpeg", "audio/wav", "audio/x-wav"]);
+    if (!allowed.has(parsed.mimeType)) return json({ error: "unsupported audio format: " + parsed.mimeType }, 415);
+
+    const audioId = makeAudioId();
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < parsed.bytes.length; i += chunk) {
+      binary += String.fromCharCode(...parsed.bytes.subarray(i, Math.min(i + chunk, parsed.bytes.length)));
+    }
+    const stored = parsed.mimeType + "|" + btoa(binary);
+    if (stored.length > MAX_PAYLOAD) return json({ error: "audio is too large" }, 413);
+    await kv.put(KEY_AUDIO_PREFIX + audioId, stored);
+    safe.data.audioId = audioId;
+    safe.data.audioMimeType = parsed.mimeType;
+    safe.data.hasAudio = true;
+  } else if (safe.data.hasAudio) {
+    safe.data.hasAudio = false;
   }
 
   list.push(safe);
@@ -215,6 +273,7 @@ async function handleAPI(request, env, pathname) {
   if (pathname === "/api/contribute") return handleContribute(request, env);
   if (pathname === "/api/admin-login") return handleAdminLogin(request, env);
   if (pathname === "/api/decide") return handleDecide(request, env);
+  if (pathname.startsWith("/api/audio/")) return handleAudio(request, env, pathname.slice("/api/audio/".length));
   return json({ error: "not found" }, 404);
 }
 
