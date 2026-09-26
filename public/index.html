@@ -755,7 +755,7 @@ var state = {
   posFilter: 'all',
   contribType: 'word',
   duplicateAck: false,
-  recording: {active:false, blobUrl:null, stream:null, mediaRecorder:null, chunks:[]},
+  recording: {active:false, blobUrl:null, blob:null, mimeType:'', stream:null, mediaRecorder:null, chunks:[]},
   playbackSpeed: {}
 };
 
@@ -1158,7 +1158,7 @@ function renderAudioList(audio){
     var key = a.id || ('a'+i);
     var speed = state.playbackSpeed[key] || '1x';
     return '<div class="audio-item">'+
-      '<button class="play-btn" data-audio="'+key+'" aria-label="Play recording">▶</button>'+
+      '<button class="play-btn" data-audio="'+key+'" data-audio-src="'+esc(a.url||'')+'" aria-label="Play recording">▶</button>'+
       '<div class="audio-meta"><b>'+esc(a.region||'Region not specified')+'</b>'+esc(a.speaker||'Community contributor')+'</div>'+
       '<div class="speed-row" role="group" aria-label="Playback speed">'+
         ['0.75x','1x','1.25x','1.5x'].map(function(s){return '<button class="'+(speed===s?'active':'')+'" data-speed="'+s+'" data-key="'+key+'">'+s+'</button>';}).join('')+
@@ -1235,27 +1235,6 @@ function contributorLabel(){
   return state.role === 'visitor' ? 'Visitor (please sign in to contribute)' : (state.role === 'admin' ? 'Administrator' : 'Community contributor');
 }
 
-/* Submits one contribution to the shared queue. When a backend is
-   deployed, this appends it server-side (via /api/contribute) so two
-   people submitting from two different phones at the same moment
-   can't overwrite each other — each request only adds its own item.
-   Falls back to the older full-array save for offline/standalone use. */
-async function submitContributionRemote(c){
-  state.contributions.push(c); // optimistic local update, instant feedback
-  if(await probeRemoteAPI()){
-    try{
-      var res = await fetch('/api/contribute', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({contribution:c})
-      });
-      if(res.ok) return true;
-    }catch(e){ /* fall through */ }
-  }
-  await sSet(K.contributions, state.contributions, true);
-  return true;
-}
-
 function renderContribute(){
   if(state.role === 'visitor'){
     mainEl.innerHTML = '<section style="padding-top:60px;max-width:520px;">'+
@@ -1324,7 +1303,7 @@ function renderContribFormBody(){
           '<label class="btn btn-ghost btn-sm" style="margin-left:auto;">Upload audio instead<input type="file" id="audioUpload" accept="audio/*" style="display:none;"></label>'+
         '</div>'+
         '<audio id="recPlayback" controls style="display:none;margin-top:10px;width:100%;"></audio>'+
-        '<p class="notice" style="margin-top:8px;">Please only upload recordings that you have permission to share. In this preview, recordings are kept only for this browser session and are not stored permanently.</p>'+
+        '<p class="notice" style="margin-top:8px;">Please only upload recordings that you have permission to share. Recordings are stored with the submission and remain pending until an administrator approves them. Keep recordings short (about 20–30 seconds).</p>'+
       '</div>'+
 
       '<div id="dupWarning"></div>'+
@@ -1379,51 +1358,150 @@ function setupRecorder(){
   var status = document.getElementById('recStatus');
   var playback = document.getElementById('recPlayback');
   var upload = document.getElementById('audioUpload');
+  if(!startBtn || !stopBtn || !status || !playback || !upload) return;
+
+  function supportedMimeType(){
+    if(typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+    var types = ['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg'];
+    for(var i=0;i<types.length;i++){
+      try{ if(MediaRecorder.isTypeSupported(types[i])) return types[i]; }catch(e){}
+    }
+    return '';
+  }
+
+  function setRecordingBlob(blob, sourceLabel){
+    if(state.recording.blobUrl){ try{ URL.revokeObjectURL(state.recording.blobUrl); }catch(e){} }
+    var url = URL.createObjectURL(blob);
+    playback.src = url;
+    playback.style.display = 'block';
+    playback.load();
+    state.recording.blob = blob;
+    state.recording.blobUrl = url;
+    state.recording.mimeType = blob.type || 'audio/*';
+    status.textContent = sourceLabel || 'Recording ready. Play it back to check it.';
+  }
 
   startBtn.addEventListener('click', async function(){
+    if(!window.isSecureContext){
+      status.textContent = 'Microphone recording requires a secure connection (HTTPS).';
+      return;
+    }
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-      status.textContent = 'Microphone access is not available in this preview — use "Upload audio instead."';
+      status.textContent = 'This browser does not provide microphone recording. Please use Upload audio instead.';
+      return;
+    }
+    if(typeof MediaRecorder === 'undefined'){
+      status.textContent = 'This browser cannot record audio here. Please use Upload audio instead.';
       return;
     }
     try{
-      var stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      var stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+      var mimeType = supportedMimeType();
+      var options = mimeType ? {mimeType:mimeType,audioBitsPerSecond:64000} : undefined;
       var chunks = [];
-      var mr = new MediaRecorder(stream);
-      mr.ondataavailable = function(e){ chunks.push(e.data); };
-      mr.onstop = function(){
-        var blob = new Blob(chunks, {type:'audio/webm'});
-        var url = URL.createObjectURL(blob);
-        playback.src = url;
-        playback.style.display = 'block';
-        state.recording.blobUrl = url;
-        stream.getTracks().forEach(function(t){t.stop();});
-        status.textContent = 'Recording captured (kept for this session only).';
-      };
-      mr.start();
+      var mr;
+      try{ mr = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream); }
+      catch(firstErr){ mr = new MediaRecorder(stream); mimeType = ''; }
+
+      state.recording.stream = stream;
+      state.recording.chunks = chunks;
       state.recording.mediaRecorder = mr;
-      startBtn.disabled = true; stopBtn.disabled = false;
+      state.recording.active = true;
+      state.recording.mimeType = mr.mimeType || mimeType || 'audio/*';
+
+      mr.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+      mr.onerror = function(){ status.textContent = 'The browser stopped the recording unexpectedly. Please try again or upload audio instead.'; };
+      mr.onstop = function(){
+        var actualType = mr.mimeType || mimeType || (chunks[0] && chunks[0].type) || 'audio/*';
+        var blob = new Blob(chunks, {type:actualType});
+        state.recording.active = false;
+        state.recording.mediaRecorder = null;
+        state.recording.chunks = [];
+        stream.getTracks().forEach(function(t){t.stop();});
+        if(blob.size < 100){ status.textContent = 'No usable audio was captured. Please try again.'; return; }
+        setRecordingBlob(blob, 'Recording ready. Play it back to check it.');
+      };
+      // Periodic chunks are more reliable on mobile browsers.
+      mr.start(250);
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
       status.innerHTML = '<span class="rec-dot live" style="display:inline-block;vertical-align:middle;margin-right:6px;"></span>Recording…';
     }catch(err){
-      status.textContent = 'Microphone access was blocked or unavailable — use "Upload audio instead."';
+      var name = err && err.name ? err.name : '';
+      if(name === 'NotAllowedError' || name === 'PermissionDeniedError') status.textContent = 'Microphone permission was denied. Allow microphone access for this site in your browser settings, then try again.';
+      else if(name === 'NotFoundError') status.textContent = 'No microphone was found. Please connect or enable a microphone, or upload an audio file.';
+      else if(name === 'NotReadableError') status.textContent = 'The microphone is already being used by another app. Close it and try again.';
+      else status.textContent = 'Microphone could not be started ('+(name || 'browser error')+'). Please try again or upload audio instead.';
     }
   });
 
   stopBtn.addEventListener('click', function(){
-    if(state.recording.mediaRecorder && state.recording.mediaRecorder.state !== 'inactive'){
-      state.recording.mediaRecorder.stop();
+    var mr = state.recording.mediaRecorder;
+    if(mr && mr.state !== 'inactive'){
+      try{ mr.requestData(); }catch(e){}
+      mr.stop();
     }
-    startBtn.disabled = false; stopBtn.disabled = true;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
   });
 
   upload.addEventListener('change', function(e){
     var f = e.target.files[0];
     if(!f) return;
-    var url = URL.createObjectURL(f);
-    playback.src = url;
-    playback.style.display = 'block';
-    state.recording.blobUrl = url;
-    status.textContent = 'File attached: ' + f.name + ' (kept for this session only).';
+    if(f.size > 1400000){
+      status.textContent = 'That audio file is too large. Please keep it under about 1.4 MB.';
+      upload.value = '';
+      return;
+    }
+    setRecordingBlob(f, 'Audio file ready. Play it back to check it.');
   });
+}
+
+function blobToDataUrl(blob){
+  return new Promise(function(resolve,reject){
+    var reader = new FileReader();
+    reader.onload = function(){ resolve(reader.result); };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+/* Audio is uploaded separately to the Worker/KV. The contribution stores only
+   an audio ID, keeping the moderation queue small and allowing approved entries
+   to expose a real /api/audio/<id> URL on phones and desktops. */
+async function submitContributionRemote(c){
+  state.contributions.push(c);
+  if(await probeRemoteAPI()){
+    try{
+      var payload = {contribution:c};
+      if(state.recording.blob){
+        payload.audio = {
+          mimeType: state.recording.mimeType || state.recording.blob.type || 'audio/*',
+          dataUrl: await blobToDataUrl(state.recording.blob)
+        };
+      }
+      var res = await fetch('/api/contribute', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(res.ok){
+        var body = await res.json().catch(function(){return null;});
+        if(body && body.contribution) state.contributions[state.contributions.length-1] = body.contribution;
+        return true;
+      }
+      var errBody = await res.json().catch(function(){return null;});
+      toast((errBody && errBody.error) ? errBody.error : 'The contribution could not be uploaded.');
+      state.contributions.pop();
+      return false;
+    }catch(e){
+      toast('Network error while submitting. Please try again.');
+      state.contributions.pop();
+      return false;
+    }
+  }
+  await sSet(K.contributions, state.contributions, true);
+  return true;
 }
 
 async function submitContribution(){
@@ -1433,24 +1511,16 @@ async function submitContribution(){
     var el = document.getElementById(id);
     if(el) data[id] = el.value.trim();
   });
-  data.hasAudio = !!state.recording.blobUrl;
+  data.hasAudio = !!state.recording.blob;
+  data.audioMimeType = state.recording.blob ? (state.recording.mimeType || state.recording.blob.type || '') : '';
+  if(t !== 'pronunciation' && !data.ksWord && !data.enMeaning){ toast('Please add at least a Kashmiri word or an English meaning.'); return; }
 
-  if(t !== 'pronunciation' && !data.ksWord && !data.enMeaning){
-    toast('Please add at least a Kashmiri word or an English meaning.');
-    return;
-  }
-
-  var c = {
-    id:'contrib-'+Date.now(),
-    type:t,
-    data:data,
-    contributorLabel: contributorLabel(),
-    status:'PENDING',
-    submittedAt: new Date().toISOString()
-  };
-  await submitContributionRemote(c);
+  var c = {id:'contrib-'+Date.now(),type:t,data:data,contributorLabel:contributorLabel(),status:'PENDING',submittedAt:new Date().toISOString()};
+  var ok = await submitContributionRemote(c);
+  if(!ok) return;
   toast('Thank you — your contribution was submitted for review.');
-  state.recording = {active:false, blobUrl:null, stream:null, mediaRecorder:null, chunks:[]};
+  if(state.recording.blobUrl){ try{ URL.revokeObjectURL(state.recording.blobUrl); }catch(e){} }
+  state.recording = {active:false,blobUrl:null,blob:null,mimeType:'',stream:null,mediaRecorder:null,chunks:[]};
   renderContribute();
 }
 
@@ -1702,6 +1772,7 @@ function openReviewModal(id){
       '<div class="diff-col"><h4>Submitted data</h4>'+
         Object.keys(d).filter(function(k){return d[k] && k!=='hasAudio';}).map(function(k){return '<div style="margin-bottom:6px;"><b style="font-size:11px;color:var(--ink-faint);text-transform:uppercase;">'+k+'</b><br>'+esc(d[k])+'</div>';}).join('') +
         (d.hasAudio ? '<div class="tag verified" style="margin-top:6px;display:inline-block;">Audio attached</div>' : '')+
+        (d.audioId ? '<audio controls preload="metadata" src="/api/audio/'+encodeURIComponent(d.audioId)+'" style="width:100%;margin-top:10px;"></audio>' : '')+
       '</div>'+
       '<div class="diff-col"><h4>Contributor</h4><p>'+esc(c.contributorLabel)+'</p><h4 style="margin-top:14px;">Submitted</h4><p>'+new Date(c.submittedAt).toLocaleString()+'</p></div>'+
     '</div>'+
@@ -1817,7 +1888,12 @@ function closeModal(){ document.getElementById('modalHost').innerHTML = ''; }
 document.addEventListener('click', function(e){
   var playBtn = e.target.closest('[data-audio]');
   if(playBtn){
-    toast('Playing sample audio is not available for this entry yet — no verified recording has been uploaded.');
+    var src = playBtn.dataset.audioSrc;
+    if(!src){ toast('No playable audio is attached to this recording.'); return; }
+    var audio = document.getElementById('zabaanGlobalAudio');
+    if(!audio){ audio = document.createElement('audio'); audio.id='zabaanGlobalAudio'; audio.preload='none'; document.body.appendChild(audio); }
+    audio.src = src;
+    audio.play().catch(function(){ toast('Your browser could not play this recording.'); });
   }
   var speedBtn = e.target.closest('[data-speed]');
   if(speedBtn){
